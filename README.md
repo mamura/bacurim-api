@@ -6,7 +6,13 @@ Backend do Bacurim com Laravel 12 e PHP 8.3 ou superior.
 
 Bootstrap e configuração inicial do ambiente referentes às issues [#2](https://github.com/mamura/bacurim-api/issues/2) e [#3](https://github.com/mamura/bacurim-api/issues/3), no milestone API-M0 — Foundation. A estrutura padrão do Laravel foi preservada para receber as próximas etapas.
 
-As rotas da API e o health check estão configurados conforme a issue [#4](https://github.com/mamura/bacurim-api/issues/4). Docker e arquitetura modular serão tratados nas próximas issues. O endereço `api-bacurim.mamura.test` será integrado ao Traefik existente na issue #10.
+As rotas da API e o health check estão configurados conforme a issue [#4](https://github.com/mamura/bacurim-api/issues/4). O ambiente Docker usa PostgreSQL 18.6, Redis 7 e Nginx/PHP-FPM no mesmo container, com acesso pelo Traefik em `api-bacurim.mamura.test`. A arquitetura modular será definida nas próximas issues.
+
+## Ambiente Docker (fluxo principal)
+
+Consulte [Ambiente de desenvolvimento Docker](docs/development-environment.md) para instalação, comandos, conexões, persistência e troubleshooting. O Compose e a pasta `docker/` ficam na raiz do workspace, uma pasta acima de `bacurim-api`.
+
+As instruções de instalação direta pelo Artisan abaixo são uma alternativa sem containers.
 
 ## Requisitos
 
@@ -14,7 +20,7 @@ As rotas da API e o health check estão configurados conforme a issue [#4](https
 - Composer 2 e Git.
 - Terminal Linux ou WSL2 no Windows. Os comandos abaixo usam sintaxe Bash.
 - `curl` para conferir a resposta HTTP pelo terminal.
-- Extensão `pdo_pgsql` e PostgreSQL 16 para operações com banco. O serviço será configurado na issue #9.
+- Extensão `pdo_pgsql` e PostgreSQL 18.6 para operações com banco em execução direta. No Docker, runtime e extensões já estão incluídos na imagem.
 
 Confira as ferramentas antes de começar:
 
@@ -93,7 +99,7 @@ O `.env.example` contém apenas parâmetros públicos e valores de exemplo. Ao a
 - `APP_URL`: endereço público previsto no Traefik. Esse parâmetro não configura o proxy nem o DNS. Para execução direta pelo Artisan, use `http://127.0.0.1:8000` no `.env`.
 - Timezone: fixo em `UTC` no `config/app.php`, independentemente do timezone da máquina. Não há variável `APP_TIMEZONE`.
 - `DB_*`: conexão PostgreSQL, porta 5432 e banco/usuário de exemplo `bacurim`. Preencha a senha localmente antes de acessar o banco; em Docker, o hostname será o nome do serviço definido no Compose.
-- `SESSION_DRIVER=file`, `CACHE_STORE=file` e `QUEUE_CONNECTION=sync`: permitem executar a aplicação sem banco ou Redis. A integração Redis será feita no ambiente Docker.
+- `SESSION_DRIVER=file`, `CACHE_STORE=file` e `QUEUE_CONNECTION=sync`: permitem executar a aplicação sem banco ou Redis. No ambiente Docker, use `CACHE_STORE=redis` e `REDIS_HOST=redis`.
 - `REDIS_*`: cliente `phpredis`, porta 6379, bancos 0 e 1 e prefixo exclusivo da API. A extensão PHP Redis será necessária quando o serviço for utilizado.
 - `MAIL_MAILER=log`: mensagens são registradas localmente, sem envio por SMTP.
 
@@ -123,7 +129,7 @@ Os testes iniciais usam sessão e cache em memória e não precisam de um banco 
 | Alterações no `.env` não aparecem | Execute `php artisan config:clear`. |
 | Erro de escrita em cache ou logs | Confira proprietário e permissões de `storage/` e `bootstrap/cache/`. |
 | Porta 8000 ocupada | Use `php artisan serve --host=127.0.0.1 --port=8001` e ajuste a URL do `curl` e `APP_URL`. |
-| Hostname `api-bacurim.mamura.test` não responde | Use a URL direta do Artisan por enquanto. A integração com Traefik está prevista na issue #10. |
+| Hostname `api-bacurim.mamura.test` não responde | Confira o DNS local, a rede `dev-network` e o roteamento do Traefik conforme o guia Docker. |
 | Erro de conexão ao banco | O health check não exige banco. Para operações com banco, configure PostgreSQL e `DB_*`; em ambientes antigos, confira também `SESSION_DRIVER=file` e `CACHE_STORE=file`. |
 
 ## Decisões tecnológicas

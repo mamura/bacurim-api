@@ -16,9 +16,9 @@ O timezone permanece fixo em UTC no `config/app.php`, para que a aplicação use
 
 ## Persistência e serviços
 
-PostgreSQL 16 é o banco planejado, conforme a issue #6. O exemplo declara a conexão `pgsql`; a criação dos serviços e a conectividade serão implementadas nas issues #7 a #11. As migrations, factories e o modelo de usuário atuais são padrões do Laravel, sem modelagem financeira implementada.
+PostgreSQL 18.6 foi adotado por decisão do projeto durante a configuração Docker, substituindo a versão 16 originalmente prevista. O exemplo declara a conexão `pgsql`; os serviços e a conectividade estão configurados no ambiente Docker. As migrations, factories e o modelo de usuário atuais são padrões do Laravel, sem modelagem financeira implementada.
 
-Redis está previsto para cache e filas no ambiente Docker, com cliente PHP `phpredis`. Enquanto esses serviços não estão configurados, o exemplo usa sessão e cache em arquivos e fila síncrona. Os prefixos de cache e Redis identificam a API para reduzir colisões com outras aplicações; não representam isolamento entre tenants.
+Redis 7 está disponível no ambiente Docker com cliente PHP `phpredis`, AOF e volume persistente. O cache local usa Redis; o exemplo mantém sessão/cache em arquivos e fila síncrona para bootstrap direto. Não há worker de filas dedicado no Compose. Os prefixos de cache e Redis identificam a API para reduzir colisões com outras aplicações; não representam isolamento entre tenants.
 
 O e-mail usa o driver `log` no desenvolvimento. Nenhum serviço SMTP ou AWS é necessário para executar o health check.
 
@@ -30,7 +30,7 @@ As rotas públicas da API são registradas em `routes/api.php`, sob `/api/v1`, u
 
 Os erros em `/api` e `/api/*` são renderizados em JSON independentemente do cabeçalho `Accept`. O formato ainda é o padrão do Laravel; convenções definitivas de respostas e erros pertencem à issue #19.
 
-O servidor Artisan permite validar a aplicação localmente nesta etapa. O ambiente Docker reutilizará o Traefik existente e a rede `dev-network`, com o hostname `api-bacurim.mamura.test`. Esses componentes serão integrados na issue #10; `APP_URL` sozinho não cria esse roteamento.
+O servidor Artisan permite validar a aplicação localmente nesta etapa. O ambiente Docker reutiliza o Traefik existente e a rede `dev-network`, com o hostname `api-bacurim.mamura.test`. A integração foi validada na issue #10; `APP_URL` sozinho não cria esse roteamento.
 
 ## Validação inicial
 
