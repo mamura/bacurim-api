@@ -6,7 +6,7 @@ Backend do Bacurim com Laravel 12 e PHP 8.3 ou superior.
 
 Bootstrap e configuração inicial do ambiente referentes às issues [#2](https://github.com/mamura/bacurim-api/issues/2) e [#3](https://github.com/mamura/bacurim-api/issues/3), no milestone API-M0 — Foundation. A estrutura padrão do Laravel foi preservada para receber as próximas etapas.
 
-Rotas `/api/v1`, health check da API, Docker e arquitetura modular serão tratados nas respectivas issues. O endereço `api-bacurim.mamura.test` será integrado ao Traefik existente na issue #10.
+As rotas da API e o health check estão configurados conforme a issue [#4](https://github.com/mamura/bacurim-api/issues/4). Docker e arquitetura modular serão tratados nas próximas issues. O endereço `api-bacurim.mamura.test` será integrado ao Traefik existente na issue #10.
 
 ## Requisitos
 
@@ -35,6 +35,24 @@ php artisan serve --host=127.0.0.1 --port=8000
 ```
 
 O Laravel responde em `http://127.0.0.1:8000`. O endpoint padrão `GET /up` verifica o bootstrap sem acessar o banco e pode ser utilizado antes de executar as migrations.
+
+## Entrada da API
+
+As rotas de `routes/api.php` usam o grupo de middleware `api` do Laravel e o prefixo `/api/v1`, sem sessão ou autenticação nesta etapa.
+
+```bash
+curl -i http://127.0.0.1:8000/api/v1/health
+```
+
+O endpoint `GET /api/v1/health` responde HTTP 200, com `Content-Type: application/json` e corpo:
+
+```json
+{"status":"ok"}
+```
+
+Esse health check verifica se a aplicação consegue responder HTTP; não consulta PostgreSQL ou Redis. Ele funciona antes de configurar os serviços externos. O `/up` padrão do Laravel permanece disponível.
+
+As respostas de erro nos caminhos `/api` e `/api/*` também são JSON, mesmo sem `Accept: application/json` ou quando o cliente solicita HTML. Nesta etapa, os erros usam o formato padrão do Laravel; as convenções definitivas serão implementadas na issue #19. Rotas web preservam a negociação de conteúdo padrão.
 
 ## Ambiente
 
