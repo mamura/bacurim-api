@@ -136,6 +136,10 @@ Os testes iniciais usam sessão e cache em memória e não precisam de um banco 
 
 As escolhas iniciais e seus limites estão registradas em [Decisões tecnológicas iniciais](docs/initial-technical-decisions.md). Esse registro cobre a fundação executável; a arquitetura modular e suas regras serão definidas na issue #12.
 
+## Arquitetura em definição
+
+O [mapa dos contextos](docs/context-map.md) define responsabilidades, conceitos compartilhados e integrações permitidas com base nos documentos de produto. A issue #12 segue em andamento; o mapa corresponde à subtarefa #13 e será complementado por camadas, estrutura física, providers e ADRs.
+
 ## Estrutura inicial
 
 - `app/`: código da aplicação e providers.
