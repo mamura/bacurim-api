@@ -39,3 +39,42 @@ Toda alteração em regra financeira deve incluir casos positivos, negativos e f
 Testes são independentes: não compartilham usuários, tenants, relógio global, cache ou estado residual entre execuções. Datas sensíveis a tempo devem usar relógio controlado. Uma regressão deve falhar antes da correção e passar depois, sem enfraquecer o contrato.
 
 Execute uma suíte com `composer test -- --testsuite=Unit` (ou Integration, Feature, Architecture). Banco de testes é necessário somente para a suíte que usa persistência, não para unitários ou contratos HTTP sem banco.
+
+## PostgreSQL exclusivo e isolamento (#28)
+
+O Compose da raiz fornece `postgres-test` no profile `testing`, PostgreSQL 18.6, sem porta publicada. Usa banco/usuário `bacurim_test` e senha pública exclusivamente de teste `testing-only`, sem permissões no serviço de desenvolvimento. O armazenamento tmpfs é descartável; o serviço de desenvolvimento e seus volumes não são utilizados.
+
+```bash
+docker compose --profile testing up -d --wait postgres-test
+docker compose exec api composer test -- --testsuite=Integration
+docker compose exec api composer test
+```
+
+A configuração PHPUnit força pgsql, banco/usuário de teste e DB_URL vazio. Tests\TestCase verifica essas condições ao criar a aplicação, antes de RefreshDatabase executar migrations. Cache/rotas de teste ficam separados. Não altere essa proteção para apontar a suíte ao banco `bacurim`.
+
+`RefreshDatabase` prepara o schema pelas migrations existentes na primeira utilização e usa transações para desfazer dados de cada teste. O processo precisa de privilégios para criar/limpar tabelas somente no banco descartável. Não execute `migrate:fresh` manualmente no serviço de desenvolvimento. Factories criam somente os registros necessários, sem seed automático compartilhado. Os testes atuais usam o modelo User do skeleton, sem implementar usuários/tenancy de negócio.
+
+`PostgreSqlPersistenceTest` verifica migrations, criação por factory, rollback entre casos e constraint única real do PostgreSQL. A suíte pode ser repetida sem depender dos dados anteriores. O modo paralelo ainda não está configurado: cada processo concorrente exigirá banco/serviço próprio e revisão da proteção, não compartilhar esse banco entre workers concorrentes.
+
+Em CI, crie um serviço PostgreSQL com o mesmo banco, usuário e senha de teste. Se o serviço estiver acessível por outro endereço, defina TEST_DB_HOST e TEST_DB_PORT; apenas o endereço muda, não o banco/role protegidos. Para encerrar o serviço local: `docker compose --profile testing stop postgres-test`. A configuração da infraestrutura fica fora do Git da API, conforme a organização do workspace.
+
+Configuração equivalente para reproduzir o serviço onde o Compose do workspace não estiver disponível:
+
+```yaml
+services:
+  postgres-test:
+    image: postgres:18.6
+    environment:
+      POSTGRES_DB: bacurim_test
+      POSTGRES_USER: bacurim_test
+      POSTGRES_PASSWORD: testing-only
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bacurim_test -d bacurim_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+```
+
+A aplicação de testes precisa estar na mesma rede ou receber TEST_DB_HOST/PORT de acesso ao serviço. Essa configuração é exclusiva para testes; não contém credenciais de desenvolvimento.
