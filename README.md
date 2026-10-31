@@ -138,7 +138,7 @@ As escolhas iniciais e seus limites estão registradas em [Decisões tecnológic
 
 ## Arquitetura em definição
 
-O [mapa dos contextos](docs/context-map.md) define responsabilidades, conceitos compartilhados e integrações permitidas com base nos documentos de produto. A issue #12 segue em andamento; o mapa corresponde à subtarefa #13 e será complementado por camadas, estrutura física, providers e ADRs.
+O [mapa dos contextos](docs/context-map.md) define responsabilidades, conceitos compartilhados e integrações permitidas com base nos documentos de produto. As [camadas e regras de dependência](docs/architecture-layers.md) definem Domain, Application, Infrastructure e Interfaces conforme a #14. A issue #12 segue em andamento: estrutura física, providers, Shared Kernel e exemplo técnico serão tratados nas próximas subtarefas.
 
 ## Estrutura inicial
 
