@@ -138,7 +138,7 @@ As escolhas iniciais e seus limites estão registradas em [Decisões tecnológic
 
 ## Arquitetura em definição
 
-O [mapa dos contextos](docs/context-map.md) define responsabilidades, conceitos compartilhados e integrações permitidas com base nos documentos de produto. As [camadas e regras de dependência](docs/architecture-layers.md) definem Domain, Application, Infrastructure e Interfaces conforme a #14. A issue #12 segue em andamento: estrutura física, providers, Shared Kernel e exemplo técnico serão tratados nas próximas subtarefas.
+O [mapa dos contextos](docs/context-map.md) define responsabilidades, conceitos compartilhados e integrações permitidas com base nos documentos de produto. As [camadas e regras de dependência](docs/architecture-layers.md) definem Domain, Application, Infrastructure e Interfaces conforme a #14. A [estrutura modular](docs/modular-structure.md) está em `app/Modules`, com os seis módulos e suas quatro camadas (#15). A issue #12 segue em andamento: providers, Shared Kernel e exemplo técnico serão tratados nas próximas subtarefas.
 
 ## Estrutura inicial
 
