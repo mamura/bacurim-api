@@ -78,3 +78,17 @@ services:
 ```
 
 A aplicação de testes precisa estar na mesma rede ou receber TEST_DB_HOST/PORT de acesso ao serviço. Essa configuração é exclusiva para testes; não contém credenciais de desenvolvimento.
+
+## Análise estática e estilo (#29)
+
+PHPStan 2 com Larastan 3 e a extensão Carbon analisa `app/`, bootstrap e rotas no nível inicial 6, sem baseline nem ignores genéricos. Configuração em `phpstan.neon`; cache em storage/framework/testing/phpstan, ignorado pelo Git. Os testes continuam verificados em execução pelo PHPUnit e pelo Pint; a configuração inicial do PHPStan cobre o código da aplicação, não o código de testes.
+
+Pint usa o preset Laravel explicitamente em `pint.json`. Código deve seguir PSR-4 e tipos explícitos, com PHPDoc de generics/arrays quando necessário para análise; não silenciar erros para passar um check sem justificar a limitação.
+
+```bash
+docker compose exec api composer analyse
+docker compose exec api composer format:check
+docker compose exec api composer format
+```
+
+Analyse e format:check são verificações sem modificar o código-fonte e retornam erro quando há violação. Format aplica correções de estilo e deve ser seguido de revisão do diff. Larastan inicializa o container Laravel para inferir tipos: não adicionar consultas ao banco ou efeitos externos em providers, e não incluir credenciais em configurações de análise.
