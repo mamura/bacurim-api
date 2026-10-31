@@ -6,7 +6,7 @@ PHPUnit 11 está fixado pelo composer.lock e é executado com `composer test`, d
 
 O bootstrap `tests/bootstrap.php` exige APP_ENV=testing e impede carregar um cache específico de testes. Os caminhos de cache de configuração e rotas são separados dos caches de desenvolvimento. Sessão e cache usam array, e-mail array, filas sync e logs null. Testes que verificam logging usam spies. Não iniciar workers, enviar e-mails ou chamar serviços reais por efeito colateral de testes.
 
-`composer test` chama PHPUnit diretamente e não executa `artisan config:clear` sobre o ambiente de desenvolvimento. A chave fixa é exclusiva dos testes, sem segredo real. Dados de conexão de persistência serão estabelecidos na #28; testes atuais não usam banco.
+`composer test` chama PHPUnit diretamente e não executa `artisan config:clear` sobre o ambiente de desenvolvimento. A chave fixa é exclusiva dos testes, sem segredo real. A configuração de persistência exclusiva está definida na seção da #28 abaixo; unitários e contratos sem persistência continuam sem consultar banco.
 
 Na raiz do workspace:
 
@@ -114,3 +114,45 @@ docker compose exec api composer test -- --testsuite=Architecture
 ```
 
 Limitações: análise estática de nomes PHP, não prova semântica de regras de negócio nem isolamento em runtime. Não resolve nomes de classes construídos dinamicamente, strings de container/reflection, SQL, referências em PHPDoc ou comunicação por eventos configurada indiretamente. Não garante que uma classe com namespace permitido esteja no arquivo correto; Composer strict-psr verifica esse aspecto para classes autoloaded. Helpers proibidos são uma lista explícita, não uma detecção universal de efeitos externos. Revisão de código e testes de comportamento continuam necessários. Erros de parsing também fazem a suíte falhar.
+
+## Fluxo antes de commits e pull requests (#31)
+
+Na raiz do workspace, prepare as dependências e o serviço exclusivo de testes:
+
+```bash
+docker compose --profile testing up -d --wait postgres-test
+docker compose exec api composer install
+docker compose exec api composer check
+```
+
+`composer check` executa, em ordem, validação estrita do Composer, Pint sem modificar fontes, PHPStan/Larastan e a suíte completa PHPUnit (incluindo arquitetura e integração PostgreSQL). Retorna no primeiro comando com falha e propaga código diferente de zero, para uso futuro no CI. Não configura GitHub Actions nesta etapa.
+
+Comandos individuais:
+
+```bash
+docker compose exec api composer test:unit
+docker compose exec api composer test:integration
+docker compose exec api composer test:api
+docker compose exec api composer test:architecture
+docker compose exec api composer analyse
+docker compose exec api composer format:check
+```
+
+Corrija a causa de falhas, rode o teste/check afetado e depois `composer check` antes do commit. Se usar `composer format`, revise o diff antes de repetir os checks. Não atualizar baseline, desabilitar guardas de banco ou ignorar regras arquiteturais para acomodar uma regressão.
+
+Para CI sem o Compose do workspace: instalar PHP 8.3+ com extensões do composer.lock e pdo_pgsql, executar composer install com require-dev, disponibilizar PostgreSQL 18.6 com as credenciais exclusivas documentadas na #28, definir TEST_DB_HOST/PORT quando necessário e executar composer check. Git, unzip e Composer 2 também são necessários para instalação. Não usar composer install --no-dev no job de qualidade.
+
+A suíte não precisa de Redis, Traefik ou Nginx para seus contratos HTTP: o kernel de teste recebe as requisições em processo. A integração precisa somente do PostgreSQL exclusivo. Não passar credenciais do ambiente real como forma de preparar os testes. Não executar a suíte em paralelo até configurar isolamento por processo.
+
+## Evidências da validação
+
+- Unitários usam PHPUnit puro e verificam o contrato de falhas da aplicação.
+- Integração PostgreSQL executada repetidamente com migrations, factories e rollback, sem usar o serviço de desenvolvimento.
+- Testes HTTP existentes preservados e aprovados.
+- Análise estática nível 6 sem baseline ou erros; Pint aprovado.
+- Regras arquiteturais exercitadas com código real e exemplos positivos/negativos.
+- PHPStan e Pint rejeitaram arquivos temporários com violações conhecidas, com exit code 1; os arquivos foram removidos.
+
+Resultados finais e números de testes devem ser consultados na execução atual, não tratados como uma meta fixa de cobertura. O ambiente e os comandos estão prontos para a configuração do pipeline na próxima etapa.
+
+O bootstrap sincroniza as variáveis forçadas de phpunit.xml em getenv, $_ENV e $_SERVER, pois Laravel pode priorizar $_SERVER. A validação final também executa contratos HTTP com APP_ENV=production, DB_DATABASE=bacurim e CACHE_STORE=redis herdados do processo; as configurações de teste devem prevalecer. A guarda de banco permanece ativa como segunda defesa antes das migrations.

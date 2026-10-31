@@ -34,9 +34,9 @@ O servidor Artisan permite validar a aplicação localmente nesta etapa. O ambie
 
 ## Validação inicial
 
-PHPUnit executa os testes iniciais, incluindo o contrato do health check e os erros HTTP da API. Os testes atuais usam sessão/cache em memória e não consultam banco; declarar SQLite no `phpunit.xml` não valida compatibilidade com PostgreSQL. A estratégia de testes, o banco de testes e as verificações de arquitetura serão definidos na issue #25.
+PHPUnit executa os testes iniciais, incluindo o contrato do health check e os erros HTTP da API. Sessão/cache de testes usam memória; testes de integração usam PostgreSQL 18.6 exclusivo com migrations e rollback. A [estratégia de testes](testing-and-quality.md) documenta o isolamento, a análise estática e as regras arquiteturais estabelecidas na #25.
 
-Laravel Pint verifica a formatação. CI e documentação técnica consolidada estão previstos na issue #32. Os arquivos Vite e da página web padrão permanecem no skeleton, mas Node.js não é necessário para executar a API e os testes atuais.
+Laravel Pint verifica a formatação, e PHPStan/Larastan analisa o código no nível 6. CI e documentação técnica consolidada estão previstos na issue #32. Os arquivos Vite e da página web padrão permanecem no skeleton, mas Node.js não é necessário para executar a API e os testes atuais.
 
 ## Limites de escopo
 

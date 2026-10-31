@@ -155,6 +155,6 @@ A última operação lê e remove a chave temporária. Use `app('redis')` para e
 
 ## Validação da issue #11
 
-Validação concluída: os três serviços ficaram saudáveis; PostgreSQL e Redis responderam pelo Laravel; o health check retornou HTTP 200 pelo Traefik; dados temporários sobreviveram à recriação dos containers com os volumes preservados e foram removidos ao final. Os cinco testes da aplicação passaram. Os testes automatizados atuais continuam sem dependência de banco; a estratégia completa pertence à issue #25.
+Validação concluída: os três serviços ficaram saudáveis; PostgreSQL e Redis responderam pelo Laravel; o health check retornou HTTP 200 pelo Traefik; dados temporários sobreviveram à recriação dos containers com os volumes preservados e foram removidos ao final. Os cinco testes da aplicação passaram. A suíte completa agora exige o serviço postgres-test do profile testing; consulte o guia de testes e qualidade da #25 para iniciar o banco exclusivo e executar composer check.
 
 Voltar ao [README](../README.md).

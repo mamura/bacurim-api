@@ -118,7 +118,18 @@ composer test
 vendor/bin/pint --test
 ```
 
-Os testes iniciais usam sessão e cache em memória e não precisam de um banco em execução. A estratégia de testes será ampliada na issue #25.
+A [estratégia de testes e qualidade](docs/testing-and-quality.md) define PHPUnit, PostgreSQL exclusivo, PHPStan/Larastan, Pint e regras arquiteturais. Unitários e contratos HTTP sem persistência não precisam de serviços; a suíte completa exige o PostgreSQL exclusivo de testes.
+
+## Qualidade no Docker
+
+Na raiz do workspace:
+
+```bash
+docker compose --profile testing up -d --wait postgres-test
+docker compose exec api composer check
+```
+
+O comando verifica Composer, formatação, análise estática e todas as suítes. Consulte o [guia de testes](docs/testing-and-quality.md) para comandos individuais, isolamento e reprodução em CI.
 
 ## Problemas comuns
 

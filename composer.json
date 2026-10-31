@@ -73,7 +73,17 @@
     ],
     "analyse": "@php vendor/bin/phpstan analyse --no-progress --memory-limit=512M",
     "format": "@php vendor/bin/pint",
-    "format:check": "@php vendor/bin/pint --test"
+    "format:check": "@php vendor/bin/pint --test",
+    "test:unit": "@test --testsuite=Unit",
+    "test:integration": "@test --testsuite=Integration",
+    "test:api": "@test --testsuite=Feature",
+    "test:architecture": "@test --testsuite=Architecture",
+    "check": [
+      "@composer validate --strict",
+      "@format:check",
+      "@analyse",
+      "@test"
+    ]
   },
   "extra": {
     "laravel": {
