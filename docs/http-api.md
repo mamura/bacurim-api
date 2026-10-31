@@ -41,3 +41,15 @@ Nomes de propriedades usam snake_case. IDs são strings opacas, booleanos são b
 Valores monetários usam decimal em string e moeda explícita, por exemplo `{"amount":"1234.56","currency":"BRL"}`. Não converter a float em nenhuma etapa da serialização ou cálculo. Precisão, escala e arredondamento serão definidos pelo domínio por moeda/operação; não assumir escala 2 universalmente. Percentuais/decimais que exijam precisão também usam strings documentadas. Não criar entidades monetárias artificiais na fundação.
 
 Os contratos são exercitados por `ApiSuccessContractTest` com fixtures, sem criar rotas de produção. O health check é uma exceção técnica explícita ao envelope.
+
+## Tratamento central de exceções (#22)
+
+`App\Http\Responses\ProblemDetails` é registrado no bootstrap do Laravel e atende exceções nos caminhos `/api` e `/api/*`, independentemente de Accept. A resposta usa `application/problem+json` e os membros RFC 9457 `type`, `title`, `status`, `detail`, `instance`. Erros HTTP genéricos usam `type=about:blank` e o título padrão do status. `instance` é o caminho da requisição, sem query string, para não refletir tokens ou filtros sensíveis.
+
+Exemplo: `{"type":"about:blank","title":"Not Found","status":404,"detail":"The requested resource was not found.","instance":"/api/v1/absent"}`.
+
+O status do corpo acompanha o status HTTP. Recursos/modelos ausentes retornam 404, métodos inválidos 405, falta de autenticação 401 e autorização negada 403. Os adaptadores usam as exceções nativas correspondentes. Os cabeçalhos semânticos Allow, Retry-After e WWW-Authenticate são preservados quando fornecidos. Não copiar cabeçalhos de corpo de uma resposta anterior para o problema JSON.
+
+Falhas inesperadas retornam 500 genérico, mesmo com debug ativo na API. Não incluir SQL, valores de configuração, nomes de classe, arquivo ou trace. O pipeline padrão de report do Laravel permanece ativo para registrar a exceção original; o renderer não faz logging duplicado nem suprime erros inesperados. A equipe deve aplicar a política de segredos também às mensagens e aos dados registrados em logs.
+
+A padronização cobre erros tratados pelo Laravel. Falhas geradas antes dele, como proxy indisponível ou corpo rejeitado pelo Nginx, dependem da configuração dessa infraestrutura. Rotas web preservam o tratamento padrão. Controllers da API devem lançar exceções mapeadas em vez de retornar corpos de erro ad hoc; endpoints futuros devem ter seus contratos testados.

@@ -18,15 +18,15 @@ class ApiHealthTest extends TestCase
     {
         $this->get('/api/v1/unknown', ['Accept' => 'text/html'])
             ->assertNotFound()
-            ->assertHeader('Content-Type', 'application/json')
-            ->assertJsonStructure(['message']);
+            ->assertHeader('Content-Type', 'application/problem+json')
+            ->assertJsonStructure(['type', 'title', 'status', 'detail', 'instance']);
     }
 
     public function test_unsupported_health_method_returns_json(): void
     {
         $this->post('/api/v1/health', [], ['Accept' => 'text/html'])
             ->assertStatus(405)
-            ->assertHeader('Content-Type', 'application/json')
-            ->assertJsonStructure(['message']);
+            ->assertHeader('Content-Type', 'application/problem+json')
+            ->assertJsonStructure(['type', 'title', 'status', 'detail', 'instance']);
     }
 }

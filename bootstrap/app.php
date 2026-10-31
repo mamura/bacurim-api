@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Responses\ProblemDetails;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->render(fn (Throwable $exception, Request $request) => (new ProblemDetails)->render($exception, $request));
         $exceptions->shouldRenderJsonWhen(function (Request $request, Throwable $exception): bool {
             return $request->is('api', 'api/*') || $request->expectsJson();
         });
