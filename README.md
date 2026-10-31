@@ -136,9 +136,9 @@ Os testes iniciais usam sessão e cache em memória e não precisam de um banco 
 
 As escolhas iniciais e seus limites estão registradas em [Decisões tecnológicas iniciais](docs/initial-technical-decisions.md). Esse registro cobre a fundação executável; a arquitetura modular e suas regras serão definidas na issue #12.
 
-## Arquitetura em definição
+## Arquitetura
 
-O [mapa dos contextos](docs/context-map.md) define responsabilidades, conceitos compartilhados e integrações permitidas com base nos documentos de produto. As [camadas e regras de dependência](docs/architecture-layers.md) definem Domain, Application, Infrastructure e Interfaces conforme a #14. A [estrutura modular](docs/modular-structure.md) está em `app/Modules`, com os seis módulos e suas quatro camadas (#15). As [convenções de providers e comunicação](docs/module-integration.md) definem bindings, ciclos de vida e contratos entre módulos (#16). Os [limites do Shared Kernel e da tenancy](docs/shared-kernel-and-tenancy.md) definem contexto explícito, isolamento e critérios de compartilhamento (#17), sem implementar autenticação ou resolução de tenants. A issue #12 segue em andamento; o exemplo técnico e os ADRs serão tratados na #18.
+O [mapa dos contextos](docs/context-map.md) define responsabilidades, conceitos compartilhados e integrações permitidas com base nos documentos de produto. As [camadas e regras de dependência](docs/architecture-layers.md) definem Domain, Application, Infrastructure e Interfaces conforme a #14. A [estrutura modular](docs/modular-structure.md) está em `app/Modules`, com os seis módulos e suas quatro camadas (#15). As [convenções de providers e comunicação](docs/module-integration.md) definem bindings, ciclos de vida e contratos entre módulos (#16). Os [limites do Shared Kernel e da tenancy](docs/shared-kernel-and-tenancy.md) definem contexto explícito, isolamento e critérios de compartilhamento (#17), sem implementar autenticação ou resolução de tenants. O [índice da arquitetura](docs/architecture.md) reúne os diagramas, ADRs e o exemplo técnico testado da #18. Autenticação, tenancy efetiva e regras financeiras continuam nas etapas de negócio.
 
 ## Estrutura inicial
 
