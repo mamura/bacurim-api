@@ -1,0 +1,45 @@
+# Decisões tecnológicas iniciais
+
+Registro da fundação da API, consolidado na issue [#5](https://github.com/mamura/bacurim-api/issues/5), parte da issue [#1](https://github.com/mamura/bacurim-api/issues/1), no milestone API-M0 — Foundation.
+
+## Runtime e dependências
+
+A aplicação usa Laravel 12 e PHP `^8.3`. O framework fornece roteamento, configuração, injeção de dependências e ferramentas de execução. A estrutura padrão foi preservada para receber a arquitetura modular prevista na issue #12.
+
+O Composer usa `config.platform.php=8.3.0` para resolver pacotes compatíveis com a versão mínima, mesmo em máquinas com PHP mais recente. Isso não substitui a validação no runtime real. O `composer.lock` é versionado e a instalação usa `composer install`; `composer update` fica reservado a alterações intencionais nas dependências.
+
+## Configuração e datas
+
+O `.env.example` documenta parâmetros públicos e placeholders. Cada ambiente mantém sua própria `APP_KEY` e credenciais fora do Git. `.env` e suas variantes são ignorados, com exceção do arquivo de exemplo. `APP_DEBUG=true` é destinado apenas ao desenvolvimento.
+
+O timezone permanece fixo em UTC no `config/app.php`, para que a aplicação use uma referência temporal consistente entre máquinas. Conversões para exibição e regras de timezone de usuários ficam para as funcionalidades futuras.
+
+## Persistência e serviços
+
+PostgreSQL 16 é o banco planejado, conforme a issue #6. O exemplo declara a conexão `pgsql`; a criação dos serviços e a conectividade serão implementadas nas issues #7 a #11. As migrations, factories e o modelo de usuário atuais são padrões do Laravel, sem modelagem financeira implementada.
+
+Redis está previsto para cache e filas no ambiente Docker, com cliente PHP `phpredis`. Enquanto esses serviços não estão configurados, o exemplo usa sessão e cache em arquivos e fila síncrona. Os prefixos de cache e Redis identificam a API para reduzir colisões com outras aplicações; não representam isolamento entre tenants.
+
+O e-mail usa o driver `log` no desenvolvimento. Nenhum serviço SMTP ou AWS é necessário para executar o health check.
+
+## Entrada HTTP
+
+As rotas públicas da API são registradas em `routes/api.php`, sob `/api/v1`, usando o grupo de middleware `api` do Laravel. Autenticação, autorização e multi-tenancy serão implementados nas etapas específicas.
+
+`GET /api/v1/health` retorna HTTP 200 e `{"status":"ok"}`. Ele verifica a capacidade da aplicação de responder HTTP, sem testar PostgreSQL ou Redis. O `/up` padrão do Laravel foi mantido.
+
+Os erros em `/api` e `/api/*` são renderizados em JSON independentemente do cabeçalho `Accept`. O formato ainda é o padrão do Laravel; convenções definitivas de respostas e erros pertencem à issue #19.
+
+O servidor Artisan permite validar a aplicação localmente nesta etapa. O ambiente Docker reutilizará o Traefik existente e a rede `dev-network`, com o hostname `api-bacurim.mamura.test`. Esses componentes serão integrados na issue #10; `APP_URL` sozinho não cria esse roteamento.
+
+## Validação inicial
+
+PHPUnit executa os testes iniciais, incluindo o contrato do health check e os erros HTTP da API. Os testes atuais usam sessão/cache em memória e não consultam banco; declarar SQLite no `phpunit.xml` não valida compatibilidade com PostgreSQL. A estratégia de testes, o banco de testes e as verificações de arquitetura serão definidos na issue #25.
+
+Laravel Pint verifica a formatação. CI e documentação técnica consolidada estão previstos na issue #32. Os arquivos Vite e da página web padrão permanecem no skeleton, mas Node.js não é necessário para executar a API e os testes atuais.
+
+## Limites de escopo
+
+Este setup não define a arquitetura definitiva dos módulos, regras financeiras, autenticação, multi-tenancy ou deploy de produção. As próximas issues complementam a base antes das funcionalidades de negócio.
+
+Voltar ao [README](../README.md).

@@ -12,21 +12,47 @@ As rotas da API e o health check estão configurados conforme a issue [#4](https
 
 - PHP 8.3 ou superior, com as extensões exigidas pelo Composer.
 - Composer 2 e Git.
+- Terminal Linux ou WSL2 no Windows. Os comandos abaixo usam sintaxe Bash.
+- `curl` para conferir a resposta HTTP pelo terminal.
 - Extensão `pdo_pgsql` e PostgreSQL 16 para operações com banco. O serviço será configurado na issue #9.
+
+Confira as ferramentas antes de começar:
+
+```bash
+php --version
+composer --version
+git --version
+```
+
+O Composer verifica as extensões exigidas pelos pacotes, incluindo `dom`, `fileinfo`, `mbstring`, `openssl`, `PDO`, `session`, `tokenizer`, `xml` e `xmlwriter`. Algumas podem ser fornecidas por polyfills; `composer check-platform-reqs` verifica os requisitos no PHP que executa o comando. `curl` e `zip` como extensões PHP são úteis para agilizar os downloads; sem `zip`, disponibilize `unzip` ou `7z` para extrair os pacotes.
+
+PostgreSQL e Redis não são necessários para o health check nem para os testes atuais. A extensão `redis` será necessária ao usar o cliente `phpredis`. Node.js e npm são necessários apenas para os scripts do frontend padrão preservados no skeleton.
 
 O Composer resolve as dependências usando PHP 8.3.0 como referência. Versione o `composer.lock` para instalações reproduzíveis.
 
 ## Instalação
 
-Execute no terminal Linux/WSL, dentro de `bacurim-api`:
+Para uma primeira instalação, clone o repositório e entre na pasta:
+
+```bash
+git clone https://github.com/mamura/bacurim-api.git
+cd bacurim-api
+```
+
+Se já tiver o repositório local, use a pasta existente. Instale as dependências de desenvolvimento e prepare o ambiente:
 
 ```bash
 composer install
 cp .env.example .env
 php artisan key:generate
+composer check-platform-reqs
 ```
 
 O `.env` é local e ignorado pelo Git. Não publique a chave da aplicação.
+
+O comando `cp` acima é exclusivo da primeira instalação, quando ainda não existe um `.env` local. Em instalações existentes, preserve o arquivo e sua `APP_KEY`. Ajuste `APP_URL=http://127.0.0.1:8000` no `.env` para execução direta pelo Artisan.
+
+Garanta que o usuário que executa o PHP tenha permissão de escrita em `storage/` e `bootstrap/cache/`. No WSL, prefira manter o projeto no sistema de arquivos Linux.
 
 Para executar a aplicação antes de configurar os serviços externos:
 
@@ -35,6 +61,10 @@ php artisan serve --host=127.0.0.1 --port=8000
 ```
 
 O Laravel responde em `http://127.0.0.1:8000`. O endpoint padrão `GET /up` verifica o bootstrap sem acessar o banco e pode ser utilizado antes de executar as migrations.
+
+Mantenha esse terminal aberto e execute o `curl` da seção seguinte em outro terminal. Para parar o servidor, pressione `Ctrl+C`.
+
+Os scripts `composer setup` e `composer dev` ainda são os padrões do Laravel: o primeiro executa migrations e instala/builda o frontend; o segundo inicia também fila, logs e Vite. Para o setup inicial da API, utilize os comandos individuais documentados aqui.
 
 ## Entrada da API
 
@@ -83,6 +113,22 @@ vendor/bin/pint --test
 ```
 
 Os testes iniciais usam sessão e cache em memória e não precisam de um banco em execução. A estratégia de testes será ampliada na issue #25.
+
+## Problemas comuns
+
+| Sintoma | Verificação ou ação |
+| --- | --- |
+| Composer acusa versão ou extensão incompatível | Confira o PHP do terminal com `php --version`, `php --ini` e `composer check-platform-reqs`. Instale a extensão no mesmo PHP usado pelo Composer. |
+| Erro de chave de criptografia | Na primeira instalação, copie o exemplo e execute `php artisan key:generate`. Preserve chaves de ambientes existentes. |
+| Alterações no `.env` não aparecem | Execute `php artisan config:clear`. |
+| Erro de escrita em cache ou logs | Confira proprietário e permissões de `storage/` e `bootstrap/cache/`. |
+| Porta 8000 ocupada | Use `php artisan serve --host=127.0.0.1 --port=8001` e ajuste a URL do `curl` e `APP_URL`. |
+| Hostname `api-bacurim.mamura.test` não responde | Use a URL direta do Artisan por enquanto. A integração com Traefik está prevista na issue #10. |
+| Erro de conexão ao banco | O health check não exige banco. Para operações com banco, configure PostgreSQL e `DB_*`; em ambientes antigos, confira também `SESSION_DRIVER=file` e `CACHE_STORE=file`. |
+
+## Decisões tecnológicas
+
+As escolhas iniciais e seus limites estão registradas em [Decisões tecnológicas iniciais](docs/initial-technical-decisions.md). Esse registro cobre a fundação executável; a arquitetura modular e suas regras serão definidas na issue #12.
 
 ## Estrutura inicial
 
