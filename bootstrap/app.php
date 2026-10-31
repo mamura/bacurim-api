@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\EnsureValidJson;
+use App\Http\Middleware\NormalizeApiErrors;
 use App\Http\Responses\ProblemDetails;
 use App\SharedKernel\Application\Exceptions\ApplicationFailure;
 use Illuminate\Foundation\Application;
@@ -16,7 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->append(NormalizeApiErrors::class);
+        $middleware->api(prepend: [EnsureValidJson::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontReport([ApplicationFailure::class]);

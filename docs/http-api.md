@@ -67,3 +67,70 @@ Códigos usam palavras minúsculas com underscore e namespace por pontos, por ex
 A falha conhecida só usa a mensagem pública fornecida explicitamente, não uma mensagem arbitrária de exception de infraestrutura. Não usar mensagem pública para inserir SQL, tenant de terceiros, payload ou credenciais. Falhas esperadas não geram logging de erro por padrão. Erros inesperados continuam 500 e reportados pelo Laravel. Campo inválido (422), conflito de estado (409) e falha interna (500) são categorias diferentes.
 
 O contrato de falhas é a primeira abstração concreta do Shared Kernel da aplicação: existe para desacoplar as falhas conhecidas dos adaptadores HTTP e será reutilizável por casos de uso dos módulos. Não introduz identidade de tenant, entidades financeiras ou repositórios genéricos no núcleo compartilhado.
+
+## Guia de reutilização e exemplos (#24)
+
+Novos módulos devem usar Resources em Interfaces, Form Requests para entrada e contratos de falha de Application quando houver uma condição esperada. Não mover classes HTTP para Domain/Application. O renderer e os middlewares são adaptadores globais de HTTP, fora dos módulos de negócio.
+
+`EnsureValidJson` rejeita corpo JSON sintaticamente inválido com 400 antes do handler da rota. Corpo ausente segue as regras de validação da operação. Mídia não suportada deve ser rejeitada com 415 pelo endpoint que exigir um tipo específico; a fundação não proíbe genericamente outras mídias. `NormalizeApiErrors` cobre respostas 4xx/5xx diretas e HttpResponseException que possam passar fora do callback de exceções, descartando corpos ad hoc e preservando cabeçalhos semânticos. Erros que já são Problem Details não são reempacotados.
+
+Exemplo real de requisição técnica:
+
+```bash
+curl -i http://api-bacurim.mamura.test/api/v1/health
+# HTTP 200, application/json, {"status":"ok"}
+curl -i -H 'Accept: text/html' http://api-bacurim.mamura.test/api/v1/absent
+# HTTP 404, application/problem+json, membros type/title/status/detail/instance
+curl -i -X POST http://api-bacurim.mamura.test/api/v1/health
+# HTTP 405, Allow: GET, HEAD, application/problem+json
+```
+
+Exemplo conceitual de coleção paginada (nenhum endpoint financeiro é criado por esta documentação):
+
+```json
+{
+  "data": [{"id":"1","name":"Example"}],
+  "links": {"first":"/api/v1/resources?page=1","last":"/api/v1/resources?page=2","prev":null,"next":"/api/v1/resources?page=2"},
+  "meta": {"current_page":1,"from":1,"last_page":2,"path":"/api/v1/resources","per_page":1,"to":1,"total":2,"links":[]}
+}
+```
+
+O exemplo abrevia a lista interna `meta.links`; a serialização real é a do paginator nativo e inclui os links de navegação. Uma consulta documentada poderia usar `?page=1&per_page=20&filter[status]=pending&sort=-date,id`; campos e operadores só estarão disponíveis quando o respectivo endpoint os implementar e validar.
+
+Exemplo de conflito conhecido:
+
+```json
+{
+  "type":"urn:bacurim:problem:example.state_conflict",
+  "title":"Conflict",
+  "status":409,
+  "detail":"The operation is incompatible with the current state.",
+  "instance":"/api/v1/resources/1",
+  "code":"example.state_conflict"
+}
+```
+
+Os textos genéricos do adaptador são em inglês. Mensagens de campos seguem o locale configurado no Laravel; não há negociação de idioma por Accept-Language nesta etapa. Identificadores e estrutura são estáveis independentemente do texto.
+
+## Matriz de contratos testados
+
+| Suíte | Contratos |
+| --- | --- |
+| `ApiSuccessContractTest` | 201/Location; recurso e coleção com data; coleção vazia; paginação com links/meta; 204 vazio; instante em UTC e preservação de decimal/ID acima da precisão segura de ponto flutuante. |
+| `ApiProblemContractTest` | 404 mesmo solicitando HTML; instance sem query; 405/Allow; 429/Retry-After; logging de erro inesperado; proteção de mensagens internas; preservação do comportamento web. |
+| `ApiValidationContractTest` | 422 por campo, incluindo campos aninhados; código e mensagem públicos de conflito; falhas esperadas sem logging de erro. |
+| `ApiExtendedContractTest` | Todas as categorias de falha de aplicação; autenticação/autorização/modelo ausente; 400, 415 e 503; resposta direta encapsulada; JSON inválido; GET/PUT/PATCH; debug desligado/produção; WWW-Authenticate. |
+| `ApiHealthTest` | Contrato técnico 200 e erros básicos em rotas reais. |
+
+As rotas `/_contract` só são registradas pelos testes. Não aparecem em `routes/` nem expõem exemplos ao consumidor real. Os testes de autenticação lançam exceções nativas para verificar o contrato; não implementam login, permissões ou rate limiting.
+
+Na raiz do workspace:
+
+```bash
+docker compose exec api composer test
+docker compose exec api vendor/bin/pint --test
+docker compose exec api composer dump-autoload --optimize --strict-psr
+docker compose exec api php artisan route:list
+```
+
+Fontes: [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457.html) e [Laravel API Resources](https://laravel.com/docs/12.x/eloquent-resources). O contrato usa wrapping e paginação nativos; os campos de negócio futuros serão documentados/testados em cada módulo, sem OpenAPI fictício de endpoints inexistentes.

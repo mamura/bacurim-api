@@ -88,7 +88,7 @@ O endpoint `GET /api/v1/health` responde HTTP 200, com `Content-Type: applicatio
 
 Esse health check verifica se a aplicação consegue responder HTTP; não consulta PostgreSQL ou Redis. Ele funciona antes de configurar os serviços externos. O `/up` padrão do Laravel permanece disponível.
 
-As respostas de erro nos caminhos `/api` e `/api/*` também são JSON, mesmo sem `Accept: application/json` ou quando o cliente solicita HTML. Nesta etapa, os erros usam o formato padrão do Laravel; as convenções definitivas serão implementadas na issue #19. Rotas web preservam a negociação de conteúdo padrão.
+As respostas de erro nos caminhos `/api` e `/api/*` também são JSON, mesmo sem `Accept: application/json` ou quando o cliente solicita HTML. Os erros seguem RFC 9457 (Problem Details), com validação por campo e códigos estáveis para falhas conhecidas; consulte as [convenções HTTP](docs/http-api.md). Rotas web preservam a negociação de conteúdo padrão.
 
 ## Ambiente
 
@@ -131,6 +131,10 @@ Os testes iniciais usam sessão e cache em memória e não precisam de um banco 
 | Porta 8000 ocupada | Use `php artisan serve --host=127.0.0.1 --port=8001` e ajuste a URL do `curl` e `APP_URL`. |
 | Hostname `api-bacurim.mamura.test` não responde | Confira o DNS local, a rede `dev-network` e o roteamento do Traefik conforme o guia Docker. |
 | Erro de conexão ao banco | O health check não exige banco. Para operações com banco, configure PostgreSQL e `DB_*`; em ambientes antigos, confira também `SESSION_DRIVER=file` e `CACHE_STORE=file`. |
+
+## Contratos HTTP
+
+As [convenções da API](docs/http-api.md) documentam REST, Resources, paginação, filtros, ordenação, datas, precisão numérica, Problem Details e testes de contrato. Erros inesperados são reportados sem expor detalhes internos na resposta.
 
 ## Decisões tecnológicas
 

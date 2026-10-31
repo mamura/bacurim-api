@@ -28,7 +28,7 @@ As rotas públicas da API são registradas em `routes/api.php`, sob `/api/v1`, u
 
 `GET /api/v1/health` retorna HTTP 200 e `{"status":"ok"}`. Ele verifica a capacidade da aplicação de responder HTTP, sem testar PostgreSQL ou Redis. O `/up` padrão do Laravel foi mantido.
 
-Os erros em `/api` e `/api/*` são renderizados em JSON independentemente do cabeçalho `Accept`. O formato ainda é o padrão do Laravel; convenções definitivas de respostas e erros pertencem à issue #19.
+Os erros em `/api` e `/api/*` são renderizados em JSON independentemente do cabeçalho `Accept`. O tratamento central usa RFC 9457 (Problem Details) conforme as [convenções HTTP](http-api.md), estabelecidas na issue #19.
 
 O servidor Artisan permite validar a aplicação localmente nesta etapa. O ambiente Docker reutiliza o Traefik existente e a rede `dev-network`, com o hostname `api-bacurim.mamura.test`. A integração foi validada na issue #10; `APP_URL` sozinho não cria esse roteamento.
 

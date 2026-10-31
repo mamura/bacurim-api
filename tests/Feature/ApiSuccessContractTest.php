@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use DateTimeImmutable;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Route;
 use Tests\Fixtures\Http\ExampleResource;
+use Tests\Fixtures\Http\SerializationResource;
 use Tests\TestCase;
 
 class ApiSuccessContractTest extends TestCase
@@ -51,5 +53,26 @@ class ApiSuccessContractTest extends TestCase
         Route::delete('/api/v1/_contract/resources/1', fn () => response()->noContent());
 
         $this->deleteJson('/api/v1/_contract/resources/1')->assertNoContent();
+    }
+
+    public function test_serialization_preserves_precision_and_converts_instants_to_utc(): void
+    {
+        Route::get('/api/v1/_contract/serialization', fn () => new SerializationResource([
+            'id' => '9007199254740993',
+            'occurred_at' => new DateTimeImmutable('2026-10-31T09:00:00-03:00'),
+            'date' => '2026-10-31',
+            'amount' => '9007199254740993.01',
+            'currency' => 'BRL',
+        ]));
+
+        $this->getJson('/api/v1/_contract/serialization')->assertOk()->assertExactJson([
+            'data' => [
+                'id' => '9007199254740993',
+                'occurred_at' => '2026-10-31T12:00:00Z',
+                'date' => '2026-10-31',
+                'amount' => '9007199254740993.01',
+                'currency' => 'BRL',
+            ],
+        ]);
     }
 }
