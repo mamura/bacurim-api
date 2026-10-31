@@ -2,6 +2,8 @@
 
 namespace App\Http\Responses;
 
+use App\SharedKernel\Application\Exceptions\ApplicationFailure;
+use App\SharedKernel\Application\Exceptions\FailureKind;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
@@ -20,6 +22,12 @@ final class ProblemDetails
         }
 
         $status = match (true) {
+            $exception instanceof ApplicationFailure => match ($exception->kind) {
+                FailureKind::Validation => 422,
+                FailureKind::Conflict => 409,
+                FailureKind::NotFound => 404,
+                FailureKind::Forbidden => 403,
+            },
             $exception instanceof HttpExceptionInterface => $exception->getStatusCode(),
             $exception instanceof AuthenticationException => 401,
             $exception instanceof ValidationException => $exception->status,
@@ -43,7 +51,7 @@ final class ProblemDetails
             }
         }
 
-        return new JsonResponse([
+        $problem = [
             'type' => 'about:blank',
             'title' => Response::$statusTexts[$status] ?? 'HTTP Error',
             'status' => $status,
@@ -57,6 +65,20 @@ final class ProblemDetails
                 default => $status >= 500 ? 'An unexpected error occurred.' : 'The request could not be completed.',
             },
             'instance' => $request->getBaseUrl().$request->getPathInfo(),
-        ], $status, [...$headers, 'Content-Type' => 'application/problem+json']);
+        ];
+
+        if ($exception instanceof ValidationException) {
+            $problem['type'] = 'urn:bacurim:problem:validation_failed';
+            $problem['code'] = 'validation_failed';
+            $problem['errors'] = $exception->errors();
+        }
+
+        if ($exception instanceof ApplicationFailure) {
+            $problem['type'] = 'urn:bacurim:problem:'.$exception->errorCode;
+            $problem['code'] = $exception->errorCode;
+            $problem['detail'] = $exception->publicMessage;
+        }
+
+        return new JsonResponse($problem, $status, [...$headers, 'Content-Type' => 'application/problem+json']);
     }
 }

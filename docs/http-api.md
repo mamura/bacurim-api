@@ -53,3 +53,17 @@ O status do corpo acompanha o status HTTP. Recursos/modelos ausentes retornam 40
 Falhas inesperadas retornam 500 genérico, mesmo com debug ativo na API. Não incluir SQL, valores de configuração, nomes de classe, arquivo ou trace. O pipeline padrão de report do Laravel permanece ativo para registrar a exceção original; o renderer não faz logging duplicado nem suprime erros inesperados. A equipe deve aplicar a política de segredos também às mensagens e aos dados registrados em logs.
 
 A padronização cobre erros tratados pelo Laravel. Falhas geradas antes dele, como proxy indisponível ou corpo rejeitado pelo Nginx, dependem da configuração dessa infraestrutura. Rotas web preservam o tratamento padrão. Controllers da API devem lançar exceções mapeadas em vez de retornar corpos de erro ad hoc; endpoints futuros devem ter seus contratos testados.
+
+## Validação e falhas conhecidas (#23)
+
+Validação de entrada usa Form Requests ou Validator nativos e retorna 422 com `code=validation_failed`, `type=urn:bacurim:problem:validation_failed` e `errors`, um objeto com campo → lista de mensagens. Campos aninhados usam notação com pontos, por exemplo `items.0.label`. A resposta não inclui os valores submetidos. Mensagens são voltadas ao consumidor; a infraestrutura não deve colocar segredos em mensagens customizadas de validação.
+
+Exemplo: `{"type":"urn:bacurim:problem:validation_failed","title":"Unprocessable Content","status":422,"detail":"The submitted data is invalid.","instance":"/api/v1/resources","code":"validation_failed","errors":{"name":["The name field is required."]}}`.
+
+Casos de uso podem sinalizar falhas esperadas por `App\SharedKernel\Application\Exceptions\ApplicationFailure`, com `FailureKind`, `errorCode` estável e `publicMessage` explicitamente seguro para publicação. O tipo é PHP puro, sem Laravel ou status HTTP. O adaptador HTTP mapeia Validation → 422, Conflict → 409, NotFound → 404 e Forbidden → 403. Domain continua com exceções próprias; Application traduz uma violação esperada quando precisar expô-la como contrato da operação. Não envolver indiscriminadamente qualquer Throwable em falha conhecida.
+
+Códigos usam palavras minúsculas com underscore e namespace por pontos, por exemplo `financial.operation_conflict`. Eles identificam a condição, não detalhes da implementação, e permanecem estáveis para decisões do frontend. Cada módulo documentará seus códigos reais; os códigos `example.*` dos testes não são regras financeiras. O tipo Problem Details é `urn:bacurim:problem:<code>`; a URI identifica o problema e não é uma URL de consulta. Mensagens podem evoluir; clientes não devem interpretar texto para identificar falhas.
+
+A falha conhecida só usa a mensagem pública fornecida explicitamente, não uma mensagem arbitrária de exception de infraestrutura. Não usar mensagem pública para inserir SQL, tenant de terceiros, payload ou credenciais. Falhas esperadas não geram logging de erro por padrão. Erros inesperados continuam 500 e reportados pelo Laravel. Campo inválido (422), conflito de estado (409) e falha interna (500) são categorias diferentes.
+
+O contrato de falhas é a primeira abstração concreta do Shared Kernel da aplicação: existe para desacoplar as falhas conhecidas dos adaptadores HTTP e será reutilizável por casos de uso dos módulos. Não introduz identidade de tenant, entidades financeiras ou repositórios genéricos no núcleo compartilhado.
