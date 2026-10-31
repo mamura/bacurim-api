@@ -29,7 +29,7 @@ O autoload PSR-4 existente mapeia `App\` para `app/`. Portanto, o caminho `app/M
 
 ## Integração entre módulos
 
-O mapa da #13 permite `IdentityAccess → Organizations`, `DataImport → Financial`, `Reporting → Financial` e `Forecasting → Financial`. Consumir apenas contratos públicos de `Application/Contracts/PublicApi` do destino. Os diretórios do PHP não impõem privacidade: essa regra deve ser observada em revisão e será automatizada na #30.
+O mapa da #13 permite `IdentityAccess → Organizations`, `DataImport → Financial`, `Reporting → Financial` e `Forecasting → Financial`. Consumir apenas contratos públicos de `Application/Contracts/PublicApi` do destino. Os diretórios do PHP não impõem privacidade: essa regra é verificada pela suíte Architecture da #30, dentro dos limites documentados no guia de testes, e também deve ser observada em revisão.
 
 Nenhum módulo contém classes ou imports neste estágio; não existem dependências entre implementações internas. Os providers e bindings serão definidos na #16, e o exemplo técnico para exercitar as camadas na #18. O autoload permite carregar uma classe, mas isso não registra automaticamente rotas, eventos ou bindings.
 

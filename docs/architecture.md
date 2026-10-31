@@ -72,7 +72,7 @@ O autoload deve resolver os fixtures sem violações PSR-4, os dois testes do ex
 
 ## Estado e limites da fundação
 
-Os seis módulos existem como estrutura inicial sem implementação de domínio; portanto não há imports de implementações entre módulos nem ciclos atuais. As regras de integração estão documentadas e o exemplo valida composição e substituição de adaptadores. Isso não equivale a uma verificação automática completa de fronteiras: os testes de arquitetura previstos na #30 deverão verificar código real conforme ele surgir.
+Os seis módulos existem como estrutura inicial sem implementação de domínio; portanto não há imports de implementações entre módulos nem ciclos atuais. As regras de integração estão documentadas e o exemplo valida composição e substituição de adaptadores. A suíte Architecture implementada na #30 verifica camadas, contratos públicos, dependências e ciclos por AST, incluindo exemplos negativos. As [regras e limitações](testing-and-quality.md) deixam explícito o que exige revisão e testes de comportamento.
 
 Não foram criados casos de uso financeiros, tabelas financeiras, autenticação, resolução de tenants, pacote de módulos, banco por tenant, CQRS obrigatório ou mensageria distribuída. A arquitetura deverá evoluir a partir dos fluxos reais, preservando as invariantes de produto e registrando mudanças relevantes em novos ADRs.
 

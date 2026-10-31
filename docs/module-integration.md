@@ -88,6 +88,6 @@ Na revisão de cada integração, verificar:
 4. O fluxo documenta autorização, transação e falhas esperadas?
 5. Um evento tem consumidor e motivo concretos, além de política de confirmação e entrega?
 
-A #16 estabelece as convenções. O exemplo executável de resolução e camadas será validado na #18; os testes automatizados de fronteiras serão implementados na #30. Até lá, o impedimento de acesso a implementações internas é uma regra arquitetural de revisão, não uma restrição técnica já automatizada. O PHP não fornece privacidade de pacote para diretórios de módulos.
+A #16 estabelece as convenções. O exemplo executável de resolução e camadas será validado na #18; os testes automatizados de fronteiras foram implementados na #30. A suíte Architecture verifica referências estáticas proibidas, dentro das limitações documentadas no guia de testes, sem substituir a revisão de código. O PHP não fornece privacidade de pacote para diretórios de módulos.
 
 Voltar ao [README](../README.md).

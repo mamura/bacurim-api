@@ -117,6 +117,6 @@ O health check atual é um endpoint técnico de bootstrap. Ele permanece em `rou
 - A operação financeira recebe contexto de tenant e preserva o histórico?
 - A abstração existe por uma necessidade concreta?
 
-As verificações automatizadas de arquitetura serão implementadas na issue #30. Este documento define as regras da #14; estrutura, bindings, Shared Kernel e exemplo técnico continuam nas #15 a #18.
+As verificações automatizadas de arquitetura estão na suíte Architecture da issue #30; consulte as regras e limitações no guia de testes. Este documento define as regras da #14; estrutura, bindings, Shared Kernel e exemplo técnico continuam nas #15 a #18.
 
 Voltar ao [README](../README.md).

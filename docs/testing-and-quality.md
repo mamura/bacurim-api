@@ -92,3 +92,25 @@ docker compose exec api composer format
 ```
 
 Analyse e format:check são verificações sem modificar o código-fonte e retornam erro quando há violação. Format aplica correções de estilo e deve ser seguido de revisão do diff. Larastan inicializa o container Laravel para inferir tipos: não adicionar consultas ao banco ou efeitos externos em providers, e não incluir credenciais em configurações de análise.
+
+## Verificações arquiteturais (#30)
+
+A suíte Architecture usa nikic/php-parser, declarado diretamente como dependência de desenvolvimento, para analisar a AST dos arquivos PHP em app/. Ela resolve nomes, aliases e imports agrupados, verifica tipos e referências estáticas e constrói o grafo de dependências entre módulos.
+
+Regras implementadas:
+
+- Domain só referencia a própria camada de seu módulo e o Shared Kernel permitido; Application não importa Interfaces/Infrastructure.
+- Interfaces não acessa Infrastructure; Infrastructure não usa Interfaces fora de seu provider de composição.
+- Domain/Application/Shared Kernel não importam Illuminate, Symfony, PDO ou Redis, nem usam os helpers de framework listados no verificador.
+- Módulos cruzam fronteiras somente por Application/Contracts/PublicApi, nas direções do mapa. Domain não integra diretamente outro módulo.
+- Shared Kernel não depende de módulos ou infraestrutura global de App; Domain não depende de SharedKernel Application.
+- Código de produção não depende de Tests; módulos desconhecidos ou namespaces de módulo fora das quatro camadas são rejeitados.
+- O grafo de referências entre módulos não pode conter ciclos.
+
+O mapa permitido está explícito em Tests\Support\ArchitectureInspector e deve mudar junto com a documentação ao adicionar um módulo. O teste sobre app/ protege o código real; exemplos sintéticos válidos e inválidos verificam que as regras não passam apenas porque os módulos ainda estão vazios. Há cenários de alias, import agrupado, FQCN, helper de framework, contrato público permitido, provider e ciclo.
+
+```bash
+docker compose exec api composer test -- --testsuite=Architecture
+```
+
+Limitações: análise estática de nomes PHP, não prova semântica de regras de negócio nem isolamento em runtime. Não resolve nomes de classes construídos dinamicamente, strings de container/reflection, SQL, referências em PHPDoc ou comunicação por eventos configurada indiretamente. Não garante que uma classe com namespace permitido esteja no arquivo correto; Composer strict-psr verifica esse aspecto para classes autoloaded. Helpers proibidos são uma lista explícita, não uma detecção universal de efeitos externos. Revisão de código e testes de comportamento continuam necessários. Erros de parsing também fazem a suíte falhar.
