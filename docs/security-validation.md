@@ -9,3 +9,9 @@ A cobertura existente inclui credenciais corretas/incorretas, usuário inexisten
 AuthenticationSecurityTest acrescenta adulteração de cookie sem invalidar o cookie legítimo, CSRF anterior ao login recusado sem desconectar sessão válida, stamps de segurança ausentes/malformados/futuros, expiração real Redis seguida de reautenticação e sigilo de falhas esperadas em respostas/logs capturados. O teste Redis verifica o DB 15 antes de qualquer operação e remove somente as chaves criadas.
 
 O teste de logging desta etapa cobre o comportamento normal de autenticação; mensagens inesperadas e contextos arbitrários serão auditados na #78. Nenhuma credencial de desenvolvimento é usada nos testes.
+
+## Papéis e efeitos negados (#75)
+
+RoleSecurityTest usa casos de uso e PostgreSQL para validar os quatro papéis atribuíveis pelo Owner, impedir qualquer alteração de Owner por Admin e bloquear autoelevação de Member/Viewer. Negações são acompanhadas da comparação completa das linhas de membership, comprovando que estado, papel e versão permanecem iguais.
+
+Também valida último Owner sem mutação parcial, contexto antigo recusado após reativação no mesmo papel e rebaixamento permitido de Owner para Admin somente com outro Owner ativo, exigindo um contexto novo. A matriz unitária/API e o vínculo específico por organização permanecem nas suítes existentes.
