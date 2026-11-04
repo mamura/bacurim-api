@@ -3,7 +3,9 @@
 use App\Http\Middleware\EnsureValidJson;
 use App\Http\Middleware\NormalizeApiErrors;
 use App\Http\Responses\ProblemDetails;
+use App\Modules\IdentityAccess\Interfaces\Http\Middleware\EnsureSessionValidity;
 use App\Modules\IdentityAccess\Interfaces\Http\Middleware\GuardSpaOrigin;
+use App\Modules\IdentityAccess\Interfaces\Http\Middleware\NoStoreAuthentication;
 use App\SharedKernel\Application\Exceptions\ApplicationFailure;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -21,6 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(NormalizeApiErrors::class);
         $middleware->statefulApi();
+        $middleware->trustProxies(headers: Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_PROTO | Request::HEADER_X_FORWARDED_PORT);
+        $middleware->alias(['auth.session.valid' => EnsureSessionValidity::class]);
+        $middleware->append(NoStoreAuthentication::class);
         $middleware->append(GuardSpaOrigin::class);
         $middleware->api(prepend: [EnsureValidJson::class]);
     })

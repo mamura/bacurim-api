@@ -35,6 +35,7 @@
         <env name="ARGON_TIME" value="2" force="true"/>
         <env name="BCRYPT_ROUNDS" value="4" force="true"/>
         <env name="BROADCAST_CONNECTION" value="null" force="true"/>
+        <env name="CACHE_LIMITER" value="array" force="true"/>
         <env name="CACHE_STORE" value="array" force="true"/>
         <env name="DB_CONNECTION" value="pgsql" force="true"/>
         <env name="DB_DATABASE" value="bacurim_test" force="true"/>

@@ -30,7 +30,7 @@ final readonly class LaravelSessionAuthentication implements SessionAuthenticati
         $session = $this->guard->getSession();
         $session->regenerate();
         $session->put('auth.identity_version', $user->version);
-        $session->put('auth.authenticated_at', time());
+        $session->put('auth.authenticated_at', now()->getTimestamp());
 
         return $this->users->execute($user->public_id);
     }

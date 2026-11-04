@@ -3,6 +3,7 @@
 use Illuminate\Support\Str;
 
 return [
+    'limiter' => env('CACHE_LIMITER', 'auth_limits'),
 
     /*
     |--------------------------------------------------------------------------
@@ -72,6 +73,7 @@ return [
             ],
         ],
 
+        'auth_limits' => ['driver' => 'redis', 'connection' => 'cache', 'prefix' => 'bacurim_auth_limits_'],
         'auth_sessions' => [
             'driver' => 'redis', 'connection' => 'sessions', 'prefix' => 'bacurim_auth_sessions_',
         ],

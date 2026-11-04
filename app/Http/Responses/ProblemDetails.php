@@ -80,6 +80,11 @@ final class ProblemDetails
             $problem['detail'] = $exception->publicMessage;
         }
 
+        if ($request->is('api/v1/auth/*', 'sanctum/csrf-cookie')) {
+            $headers['Cache-Control'] = 'no-store, private';
+            $headers['Pragma'] = 'no-cache';
+        }
+
         return new JsonResponse($problem, $status, [...$headers, 'Content-Type' => 'application/problem+json']);
     }
 }
