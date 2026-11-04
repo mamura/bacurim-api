@@ -17,3 +17,13 @@ A migration aditiva conserva users e seus IDs, hashes e relações existentes. A
 Antes de alterar o schema, valida endereços, colisões após normalização e datas legadas. Dados incompatíveis interrompem a migration para reconciliação explícita, sem unir contas ou trocar senhas silenciosamente. PostgreSQL executa a migration transacionalmente. Down remove apenas a extensão; não apaga usuários. A normalização de e-mail é mantida no rollback e datas retornam à precisão anterior. Nenhum banco de desenvolvimento foi migrado automaticamente.
 
 Factories usam UUID, estado ativo por padrão e estados inactive/unverified. Hashes das fixtures são exclusivos de teste. Ainda não há fluxo de verificação nem autenticação.
+
+## Credenciais (#48)
+
+PasswordHasher é uma porta de Application. O adaptador utiliza o driver Argon2id do Laravel para novos hashes, com salt aleatório e configuração padrão de 64 MiB, 4 iterações e 1 thread. ARGON_MEMORY e ARGON_TIME podem ajustar o custo, respeitando pisos de 19 MiB e 2 iterações; testes usam esses pisos, sem reduzir abaixo deles. O PHP precisa suportar Argon2id. Referência: [OWASP Password Storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
+
+Política inicial: 15–128 caracteres UTF-8, permite espaços e frases, sem composição obrigatória ou trim/transformação silenciosa. Rejeita controles, entrada só de espaços e uma pequena lista explícita de valores comuns. Essa lista não equivale a um serviço completo de senhas comprometidas; ampliar a proteção antes da liberação pública conforme o risco. Não há alegação de conformidade integral NIST. Referência de comprimento: [NIST](https://www.nist.gov/cybersecurity-and-privacy/how-do-i-create-good-password).
+
+Hashes bcrypt legados podem ser verificados e sinalizados para rehash; não há login/rehash automático implementado nesta etapa. Candidatos bcrypt maiores que 72 bytes são rejeitados para impedir equivalência por truncamento. A verificação não aplica o comprimento mínimo novo a senhas legadas. Verificação limita a entrada a 512 bytes; novas senhas têm no máximo 128 code points UTF-8. Não altera Unicode ou caixa da senha.
+
+PasswordHash não pertence à entidade User ou a DTO público. JSON/debug são redigidos e serialização PHP é proibida. encoded() é um acesso explícito exclusivo de adaptadores de persistência/hash, nunca deve ser registrado. Parâmetros de senha usam SensitiveParameter; mensagens de erro não repetem o valor. Essas proteções não tornam seguro registrar entradas HTTP indiscriminadamente. Não há login, recuperação ou envio de credenciais.
