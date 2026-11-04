@@ -19,6 +19,7 @@ use InvalidArgumentException;
 use RuntimeException;
 use Tests\Support\MembershipTestActor;
 use Tests\Support\Tenancy\ProbeSchema;
+use Tests\Support\Tenancy\ProbeUseCases;
 use Tests\Support\Tenancy\ScopedProbeRepository;
 use Tests\Support\Tenancy\TenantProbeJob;
 use Tests\TestCase;
@@ -140,5 +141,22 @@ class TenantJobIsolationTest extends TestCase
             $this->assertSame('tenant.unauthenticated', $failure->errorCode);
         }
         $this->assertDatabaseCount('tenant_isolation_probes', 0);
+    }
+
+    public function test_job_resource_identifier_cannot_override_payload_organization_and_next_run_is_clean(): void
+    {
+        [$a,$orgA,$contextA,$identityA] = $this->fixture();
+        [$b,$orgB,$contextB,$identityB] = $this->fixture();
+        $id = (new ScopedProbeRepository)->create($contextB, 'Private B');
+        $runner = app(TenantJobRunner::class);
+        try {
+            $runner->run($identityA, TenantCapability::ReadFinancial, fn (TenantContext $scope) => app(ProbeUseCases::class)->read($scope, $id));
+            $this->fail('Expected cross-tenant resource denial');
+        } catch (ApplicationFailure $failure) {
+            $this->assertSame('probe.not_found', $failure->errorCode);
+        }
+        $value = $runner->run($identityB, TenantCapability::ReadFinancial, fn (TenantContext $scope) => app(ProbeUseCases::class)->read($scope, $id)->label);
+        $this->assertSame('Private B', $value);
+        $this->assertFalse(app('request')->attributes->has(TenantContext::class));
     }
 }

@@ -42,6 +42,8 @@ try {
         $service->changeRole($context, $member, MembershipRole::Viewer, 1);
     } elseif ($operation === 'revoke') {
         $service->revoke($context, $member, 1);
+    } elseif ($operation === 'add') {
+        $service->add($context, $member, MembershipRole::Member);
     } else {
         throw new RuntimeException('Unknown test operation.');
     }
