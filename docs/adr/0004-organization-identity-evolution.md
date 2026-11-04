@@ -1,6 +1,6 @@
 # ADR-0004 — Organização e evolução da identidade na API-M1
 
-Status: adotado para organizações (#39); contratos de identidade/memberships/tenant aprovados no planejamento, pendentes nas respectivas issues.
+Status: adotado para organizações (#39), identidades (#45), autenticação (#52) e memberships (#59); contexto global de tenant permanece na #66.
 
 ## Contexto
 
@@ -16,4 +16,4 @@ Organization usa UUID v4 público e bigint interno. UUID é opaco e único no ba
 
 ## Consequências
 
-As capacidades atuais são internas. Não expor os casos de uso sem autorização real e contrato HTTP. Não assumir isolamento multi-tenant, autenticação ou memberships implementados pela presença de organizations. Os demais módulos continuam sem implementação de negócio. Novas integrações devem criar contratos públicos específicos, sem importar repositórios ou entidades internas de Organizations.
+Os casos de uso de organizações/identidades continuam internos. Autenticação e memberships agora possuem endpoints autorizados, com organização explícita no gerenciamento de vínculos (#52/#59). Isso não implementa o contexto global de tenant nem isolamento de dados financeiros (#66). Os demais módulos continuam sem implementação de negócio. Novas integrações devem criar contratos públicos específicos, sem importar repositórios ou entidades internas de Organizations.

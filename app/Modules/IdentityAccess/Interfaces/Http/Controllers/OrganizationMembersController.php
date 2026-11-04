@@ -6,6 +6,7 @@ use App\Modules\IdentityAccess\Application\UseCases\ListUserOrganizations;
 use App\Modules\IdentityAccess\Application\UseCases\ManageOrganizationMembers;
 use App\Modules\IdentityAccess\Domain\MembershipRole;
 use App\Modules\IdentityAccess\Interfaces\Http\Requests\AddMemberRequest;
+use App\Modules\IdentityAccess\Interfaces\Http\Requests\MembershipCollectionRequest;
 use App\Modules\IdentityAccess\Interfaces\Http\Requests\RevokeMemberRequest;
 use App\Modules\IdentityAccess\Interfaces\Http\Requests\UpdateMemberRequest;
 use App\Modules\IdentityAccess\Interfaces\Http\Resources\MembershipResource;
@@ -16,7 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class OrganizationMembersController
 {
-    public function index(string $organization, ManageOrganizationMembers $members): AnonymousResourceCollection
+    public function index(MembershipCollectionRequest $request, string $organization, ManageOrganizationMembers $members): AnonymousResourceCollection
     {
         return MembershipResource::collection($members->list($organization));
     }
@@ -25,7 +26,10 @@ final class OrganizationMembersController
     {
         $input = $request->validated();
 
-        return (new MembershipResource($members->add($organization, $input['user_public_id'], MembershipRole::from($input['role']))))->response()->setStatusCode(201);
+        $created = $members->add($organization, $input['user_public_id'], MembershipRole::from($input['role']));
+
+        return (new MembershipResource($created))->response()->setStatusCode(201)->header('Location', route('members.update', ['organization' => $created->organizationPublicId, 'membership' => $created->publicId]));
+
     }
 
     public function update(UpdateMemberRequest $request, string $organization, string $membership, ManageOrganizationMembers $members): MembershipResource
@@ -43,7 +47,7 @@ final class OrganizationMembersController
         return response()->noContent();
     }
 
-    public function organizations(ListUserOrganizations $organizations): AnonymousResourceCollection
+    public function organizations(MembershipCollectionRequest $request, ListUserOrganizations $organizations): AnonymousResourceCollection
     {
         return UserOrganizationResource::collection($organizations->execute());
     }

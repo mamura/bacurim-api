@@ -19,3 +19,5 @@ Membership Resource expõe public_id, organization_public_id, user {public_id,na
 Erros usam application/problem+json: 401 sem sessão válida, 403 origem não confiável ou autorização insuficiente, 404 organização/vínculo/usuário não encontrado (vínculo de outra organização também resulta em 404 após autorizar o caminho), 409 duplicata/versão antiga/transição inválida/último Owner/usuário inativo, 419 CSRF, 422 validação, 429 limite de login. Organização inativa não concede acesso. As operações consultam os estados atuais; revogar um vínculo bloqueia a próxima operação naquela organização sem desconectar o usuário de outras.
 
 Não há seleção implícita de tenant, cadastro/convidado automático nem endpoint de bootstrap. O registro interno com primeiro Owner será integrado ao cadastro de empresa posteriormente.
+
+As coleções possuem ordem estável de criação (ID interno), sem paginação/filtros/ordenação configuráveis nesta etapa. Parâmetros de query são rejeitados com 422. Datas do recurso usam UTC com sufixo Z e microssegundos. POST retorna Location com o endereço público do vínculo criado.
