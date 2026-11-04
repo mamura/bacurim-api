@@ -16,7 +16,7 @@ O job Quality inicia PostgreSQL 18.6 exclusivo para a execução, com health che
 
 `composer check` executa uma vez validação estrita, Pint, PHPStan/Larastan e toda a suíte PHPUnit, incluindo integração e arquitetura. Não há execução redundante de suítes individuais no workflow. Qualquer falha retorna status não zero e impede sucesso do job; não há continue-on-error. A saída dos checks e os logs do PostgreSQL em caso de falha permitem diagnóstico sem imprimir configurações de produção.
 
-Redis não é iniciado porque nenhuma suíte atual exige um servidor Redis: testes HTTP usam cache array e a persistência testada é PostgreSQL. Quando existir integração que exija Redis real, adicionar serviço e isolamento próprios, junto com os testes correspondentes. Traefik, Nginx e o Compose fora do repositório não são necessários ao CI.
+Desde a #53, o CI também inicia Redis 7 para testes reais de sessões criptografadas, expiração e fluxo HTTP. TEST_REDIS_HOST/PORT apontam para esse serviço isolado, usando DB15. A extensão PHP redis é instalada pelo workflow. Cache/rate limiting de testes permanecem array, enquanto o backend de sessão Redis é validado explicitamente. Traefik, Nginx e o Compose fora do repositório não são necessários ao CI.
 
 ## Proteção da master e validação (#37)
 

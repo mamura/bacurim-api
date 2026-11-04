@@ -15,7 +15,7 @@ trait StatefulBrowser
         config(['session.driver' => 'database', 'session.connection' => null, 'session.domain' => '.mamura.test', 'sanctum.stateful' => ['bacurim.mamura.test', 'api-bacurim.mamura.test'], 'cors.allowed_origins' => ['http://bacurim.mamura.test', 'http://api-bacurim.mamura.test']]);
     }
 
-    /** @param array<string, mixed> $data @param array<string, string> $headers */
+    /** @param array<string, mixed> $data @param array<string, string|null> $headers */
     protected function browserRequest(string $method, string $uri, #[SensitiveParameter] array $data = [], array $headers = [], bool $csrf = true): TestResponse
     {
         app('auth')->shouldUse('web');
@@ -27,7 +27,9 @@ trait StatefulBrowser
         if ($csrf && isset($this->browserCookies['XSRF-TOKEN'])) {
             $server['HTTP_X_XSRF_TOKEN'] = $this->browserCookies['XSRF-TOKEN'];
         }
-        $response = $this->call($method, $uri, [], $this->browserCookies, [], array_replace($server, $headers), json_encode($data, JSON_THROW_ON_ERROR));
+        $server = array_replace($server, $headers);
+        $server = array_filter($server, static fn ($value) => $value !== null);
+        $response = $this->call($method, $uri, [], $this->browserCookies, [], $server, json_encode($data, JSON_THROW_ON_ERROR));
         foreach ($response->headers->getCookies() as $cookie) {
             $this->browserCookies[$cookie->getName()] = $cookie->getValue();
         }

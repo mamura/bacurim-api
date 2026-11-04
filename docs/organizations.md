@@ -14,7 +14,7 @@ O UUID é validado no domínio, mas a unicidade será garantida pelo banco na pe
 
 ## Schema PostgreSQL (#41)
 
-organizations usa bigint interno, uuid único, nomes varchar(255), documento varchar(14) opcional, estado active/inactive e timestamps com timezone e microssegundos. Constraints rejeitam nomes vazios/controles, documento fora do formato canônico, estado inválido e datas inconsistentes. Dígitos verificadores são responsabilidade do domínio; SQL valida a estrutura. Version inteiro positivo prepara o controle de concorrência na persistência. Não há índice especulativo de estado ou unicidade de documento/nome. Factory oferece organizações ativas/inativas. Rollback é validado somente no banco exclusivo de testes; nenhum banco de desenvolvimento foi migrado automaticamente.
+organizations usa bigint interno, uuid único, nomes varchar(255), documento varchar(14) opcional, estado active/inactive e timestamps com timezone e microssegundos. Constraints rejeitam nomes vazios/controles, documento fora do formato canônico, estado inválido e datas inconsistentes. Dígitos verificadores são responsabilidade do domínio; SQL valida a estrutura. Version inteiro positivo prepara o controle de concorrência na persistência. Não há índice especulativo de estado ou unicidade de documento/nome. Factory oferece organizações ativas/inativas. Rollback é validado somente no banco exclusivo de testes; a #58 inicializou o schema local após confirmar banco vazio.
 
 ## Persistência (#42)
 
@@ -42,8 +42,8 @@ A evolução para identidade global está registrada no [ADR-0004](adr/0004-orga
 
 Execute na raiz do workspace:
 
-    docker compose --profile testing up -d --wait postgres-test
+    docker compose --profile testing up -d --wait postgres-test redis-test
     docker compose exec api composer test -- --filter=Organizations
     docker compose exec api composer check
 
-Migrations de desenvolvimento podem ser aplicadas conscientemente com docker compose exec api php artisan migrate. Esta issue só executou migrations no banco de testes.
+Migrations de desenvolvimento podem ser aplicadas conscientemente com docker compose exec api php artisan migrate. A #39 validou migrations no banco de testes; a inicialização do schema local ocorreu na #58, após confirmar banco vazio.

@@ -21,7 +21,7 @@ final readonly class LaravelPasswordHasher implements PasswordHasher
 
     public function verify(#[SensitiveParameter] string $password, PasswordHash $hash): bool
     {
-        if (strlen($password) > 512 || ! mb_check_encoding($password, 'UTF-8')) {
+        if (str_contains($password, "\0") || strlen($password) > 512 || ! mb_check_encoding($password, 'UTF-8')) {
             return false;
         }
         $algorithm = password_get_info($hash->encoded())['algoName'];

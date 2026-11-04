@@ -1,8 +1,8 @@
 # Bacurim API
 
-API Laravel 12/PHP 8.3, organizada como monólito modular. A fundação inclui rotas `/api/v1`, contratos HTTP, testes, análise estática e CI. Funcionalidades financeiras, autenticação e tenancy efetiva serão implementadas nas próximas etapas.
+API Laravel 12/PHP 8.3, organizada como monólito modular. A fundação inclui rotas `/api/v1`, contratos HTTP, testes, análise estática e CI. Autenticação SPA por sessão está implementada; funcionalidades financeiras e tenancy efetiva permanecem nas próximas etapas.
 
-Organizações e identidades globais já possuem domínio, persistência PostgreSQL e casos de uso internos. Consulte [organizações](docs/organizations.md) e [identidade](docs/identity.md). Não há cadastro público, login, memberships ou isolamento efetivo nesta etapa.
+Organizações e identidades globais já possuem domínio, persistência PostgreSQL e casos de uso internos. Consulte [organizações](docs/organizations.md) e [identidade](docs/identity.md). Login/logout/me estão disponíveis por sessão Sanctum; consulte [autenticação](docs/authentication.md). Não há cadastro público, memberships ou isolamento efetivo nesta etapa.
 
 ## Começar pelo ambiente Docker
 
@@ -64,7 +64,7 @@ Migrations alteram o banco configurado; execute intencionalmente e confira o amb
 ## Testes e qualidade
 
 ```bash
-docker compose --profile testing up -d --wait postgres-test
+docker compose --profile testing up -d --wait postgres-test redis-test
 docker compose exec api composer check
 ```
 

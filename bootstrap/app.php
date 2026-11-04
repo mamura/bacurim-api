@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(NormalizeApiErrors::class);
         $middleware->statefulApi();
+        $middleware->trimStrings(except: ['new_password']);
         $middleware->trustProxies(headers: Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_PROTO | Request::HEADER_X_FORWARDED_PORT);
         $middleware->alias(['auth.session.valid' => EnsureSessionValidity::class]);
         $middleware->append(NoStoreAuthentication::class);
@@ -31,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontReport([ApplicationFailure::class]);
+        $exceptions->dontFlash(['new_password']);
         $exceptions->render(fn (Throwable $exception, Request $request) => (new ProblemDetails)->render($exception, $request));
         $exceptions->shouldRenderJsonWhen(function (Request $request, Throwable $exception): bool {
             return $request->is('api', 'api/*') || $request->expectsJson();
