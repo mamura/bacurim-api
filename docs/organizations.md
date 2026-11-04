@@ -29,3 +29,21 @@ UpdateOrganization recebe UUID, OrganizationDetails e expectedVersion obrigatór
 DTO de saída não expõe chave interna nem modelo Eloquent; inclui UUID, detalhes, estado, datas e versão. Documento pode conter dado pessoal: DTO é interno e não deve ser registrado em logs ou exposto por futuro endpoint sem contrato/autorização. Invariantes inválidas viram ApplicationFailure Validation (organizations.invalid), ausência NotFound e colisão/concorrência Conflict, compatíveis com o tradutor HTTP central.
 
 Essas capacidades são internas e não fazem autorização de usuário. Nenhuma rota, cadastro público, owner implícito ou membership foi criado. Futuros adaptadores devem validar acesso antes de invocar as operações; UUID conhecido não prova acesso.
+
+## Validação e limites (#44)
+
+Os testes unitários não inicializam Laravel e cobrem nomes/limites Unicode, identidade, datas, versão, CPF/CNPJ, transições e coordenação dos casos de uso com portas controladas. Testes de integração usam PostgreSQL real exclusivo para constraints, migrations/rollback, factories, mapeamento, ciclo completo, colisão e snapshots desatualizados.
+
+Falhas inesperadas de SQL são provocadas com constraints temporárias dentro da transação de teste: create/update propagam QueryException, desfazem a escrita e mantêm conexão e versão consistentes. Esses detalhes não são mensagens públicas; o tradutor HTTP existente mantém falhas inesperadas como erro interno. Nenhum endpoint de organização foi criado apenas para testar essa integração.
+
+Controle de versão é validado com snapshots concorrentes determinísticos; teste de múltiplos processos simultâneos não faz parte desta etapa. Autorização, isolamento entre organizações e concorrência de memberships pertencem às respectivas issues API-M1. Não há promessa de produção liberada ou segurança multi-tenant concluída.
+
+A evolução para identidade global está registrada no [ADR-0004](adr/0004-organization-identity-evolution.md). Documentos externos de produto permanecem intactos.
+
+Execute na raiz do workspace:
+
+    docker compose --profile testing up -d --wait postgres-test
+    docker compose exec api composer test -- --filter=Organizations
+    docker compose exec api composer check
+
+Migrations de desenvolvimento podem ser aplicadas conscientemente com docker compose exec api php artisan migrate. Esta issue só executou migrations no banco de testes.

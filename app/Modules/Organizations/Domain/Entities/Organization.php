@@ -26,7 +26,7 @@ final readonly class Organization
         public DateTimeImmutable $updatedAt,
         public int $version = 0,
     ) {
-        if ($version < 0 || ($id === null && $version !== 0)) {
+        if ($version < 0 || (($id === null) !== ($version === 0))) {
             throw new InvalidOrganization('Invalid persistence version.');
         }
         if ($id !== null && $id < 1) {

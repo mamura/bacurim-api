@@ -30,7 +30,7 @@ class OrganizationTest extends TestCase
     public function test_updates_and_state_transitions_preserve_identity(): void
     {
         $time = new DateTimeImmutable('2026-11-04T12:00:00Z');
-        $original = new Organization(42, self::UUID, 'Original', null, null, OrganizationStatus::Active, $time, $time);
+        $original = new Organization(42, self::UUID, 'Original', null, null, OrganizationStatus::Active, $time, $time, 1);
         $later = $time->modify('+1 second');
         $changed = $original->updateDetails(' New ', ' Legal ', new OrganizationDocument('529.982.247-25'), $later);
         $inactive = $changed->changeStatus(OrganizationStatus::Inactive, $later);
@@ -76,7 +76,7 @@ class OrganizationTest extends TestCase
     {
         $time = new DateTimeImmutable;
         $this->expectException(InvalidOrganization::class);
-        new Organization(0, self::UUID, 'Name', null, null, OrganizationStatus::Active, $time, $time);
+        new Organization(0, self::UUID, 'Name', null, null, OrganizationStatus::Active, $time, $time, 1);
     }
 
     public function test_updates_cannot_move_time_backwards(): void
@@ -85,6 +85,40 @@ class OrganizationTest extends TestCase
         $entity = Organization::create(self::UUID, 'Name', null, null, $time);
         $this->expectException(InvalidOrganization::class);
         $entity->changeStatus(OrganizationStatus::Inactive, $time->modify('-1 second'));
+    }
+
+    public function test_invalid_legal_name_is_rejected(): void
+    {
+        $this->expectException(InvalidOrganization::class);
+        Organization::create(self::UUID, 'Company', str_repeat('x', 256), null, new DateTimeImmutable);
+    }
+
+    public function test_reconstitution_rejects_reversed_timestamps(): void
+    {
+        $time = new DateTimeImmutable;
+        $this->expectException(InvalidOrganization::class);
+        new Organization(1, self::UUID, 'Company', null, null, OrganizationStatus::Active, $time, $time->modify('-1 second'), 1);
+    }
+
+    public static function invalidVersions(): array
+    {
+        return [[null, -1], [null, 1], [1, 0], [1, -1]];
+    }
+
+    #[DataProvider('invalidVersions')]
+    public function test_identity_and_version_must_agree(?int $id, int $version): void
+    {
+        $time = new DateTimeImmutable;
+        $this->expectException(InvalidOrganization::class);
+        new Organization($id, self::UUID, 'Company', null, null, OrganizationStatus::Active, $time, $time, $version);
+    }
+
+    public function test_detail_updates_cannot_move_time_backwards(): void
+    {
+        $time = new DateTimeImmutable;
+        $entity = Organization::create(self::UUID, 'Company', null, null, $time);
+        $this->expectException(InvalidOrganization::class);
+        $entity->updateDetails('Changed', null, null, $time->modify('-1 second'));
     }
 
     public static function validDocuments(): array

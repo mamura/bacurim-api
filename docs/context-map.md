@@ -1,5 +1,7 @@
 # Mapa dos contextos do Bacurim
 
+> Evolução API-M1: as premissas abaixo de usuário restrito a um tenant e ausência de identidade global são históricas e foram substituídas pelo [ADR-0004](adr/0004-organization-identity-evolution.md). O planejamento prevê identidade global com memberships em múltiplas organizações e PostgreSQL compartilhado; essas capacidades ainda não estão implementadas pela #39.
+
 Definição inicial da issue [#13](https://github.com/mamura/bacurim-api/issues/13), parte da arquitetura da issue [#12](https://github.com/mamura/bacurim-api/issues/12). Os limites abaixo orientam a implementação incremental do monólito modular. Este documento não implementa funcionalidades financeiras nem cria entidades, tabelas ou módulos vazios.
 
 ## Referências de produto

@@ -10,7 +10,9 @@ use App\Modules\Organizations\Infrastructure\Persistence\Eloquent\Models\Organiz
 use App\SharedKernel\Application\Exceptions\ApplicationFailure;
 use App\SharedKernel\Application\Exceptions\FailureKind;
 use DateTimeImmutable;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -100,5 +102,33 @@ class OrganizationRepositoryTest extends TestCase
         $this->expectException(ApplicationFailure::class);
         $this->expectExceptionMessage('Organization not found.');
         $this->repository()->update($original);
+    }
+
+    public function test_unexpected_database_failure_is_not_disguised_as_business_conflict(): void
+    {
+        $original = $this->repository()->create($this->newOrganization());
+        DB::statement("ALTER TABLE organizations ADD CONSTRAINT organizations_probe_failure CHECK (name <> 'Rejected')");
+        $candidate = $this->newOrganization()->updateDetails('Rejected', null, null, new DateTimeImmutable('2026-11-04T14:00:00Z'));
+        try {
+            $this->repository()->create($candidate);
+            $this->fail('Expected a database constraint failure.');
+        } catch (QueryException $failure) {
+            $this->assertSame('23514', $failure->errorInfo[0]);
+        }
+        $this->assertDatabaseCount('organizations', 1);
+        $this->assertEquals($original, $this->repository()->findByPublicId($original->publicId));
+    }
+
+    public function test_failed_update_rolls_back_and_does_not_increment_version(): void
+    {
+        $original = $this->repository()->create($this->newOrganization());
+        DB::statement("ALTER TABLE organizations ADD CONSTRAINT organizations_probe_update CHECK (name <> 'Rejected')");
+        try {
+            $this->repository()->update($original->updateDetails('Rejected', null, null, $original->updatedAt));
+            $this->fail('Expected a database constraint failure.');
+        } catch (QueryException $failure) {
+            $this->assertSame('23514', $failure->errorInfo[0]);
+        }
+        $this->assertEquals($original, $this->repository()->findByPublicId($original->publicId));
     }
 }
