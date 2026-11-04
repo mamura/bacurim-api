@@ -7,8 +7,10 @@ use App\SharedKernel\Application\Exceptions\FailureKind;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+#[Group('security')]
 class ApiValidationContractTest extends TestCase
 {
     public function test_validation_returns_field_messages_with_dot_notation(): void

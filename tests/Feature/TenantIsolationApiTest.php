@@ -12,6 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Support\StatefulBrowser;
 use Tests\Support\Tenancy\DowngradeTenantActor;
 use Tests\Support\Tenancy\ProbeResource;
@@ -20,6 +21,7 @@ use Tests\Support\Tenancy\ProbeUseCases;
 use Tests\Support\Tenancy\ScopedProbeRepository;
 use Tests\TestCase;
 
+#[Group('security')]
 class TenantIsolationApiTest extends TestCase
 {
     use RefreshDatabase,StatefulBrowser;

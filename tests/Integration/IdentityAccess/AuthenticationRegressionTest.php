@@ -10,9 +10,11 @@ use App\SharedKernel\Application\Exceptions\ApplicationFailure;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Support\StatefulBrowser;
 use Tests\TestCase;
 
+#[Group('security')]
 class AuthenticationRegressionTest extends TestCase
 {
     use RefreshDatabase, StatefulBrowser;

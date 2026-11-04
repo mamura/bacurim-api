@@ -4,9 +4,11 @@ namespace Tests\Integration\IdentityAccess;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Support\StatefulBrowser;
 use Tests\TestCase;
 
+#[Group('security')]
 class SpaBoundaryTest extends TestCase
 {
     use RefreshDatabase, StatefulBrowser;

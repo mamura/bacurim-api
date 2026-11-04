@@ -17,10 +17,12 @@ use App\SharedKernel\Application\Exceptions\ApplicationFailure;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use RuntimeException;
 use Tests\Support\MembershipTestActor;
 use Tests\TestCase;
 
+#[Group('security')]
 class ManageOrganizationMembersTest extends TestCase
 {
     use MembershipTestActor,RefreshDatabase;

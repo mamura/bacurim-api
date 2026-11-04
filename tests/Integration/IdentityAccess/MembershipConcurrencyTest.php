@@ -9,9 +9,11 @@ use App\Modules\Organizations\Infrastructure\Persistence\Eloquent\Models\Organiz
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
+#[Group('security')]
 class MembershipConcurrencyTest extends TestCase
 {
     public static function operations(): array

@@ -4,7 +4,7 @@
 
 PHPUnit 11 está fixado pelo composer.lock e é executado com `composer test`, dentro do container `api`. `phpunit.xml` é a fonte das variáveis de teste; não é necessário copiar um `.env.testing`. Os valores críticos usam `force=true` para não herdar APP_ENV, drivers, URL de banco, chave ou debug do processo de desenvolvimento.
 
-O bootstrap `tests/bootstrap.php` exige APP_ENV=testing e impede carregar um cache específico de testes. Os caminhos de cache de configuração e rotas são separados dos caches de desenvolvimento. Sessão e cache usam array, e-mail array, filas sync e logs null. Testes que verificam logging usam spies. Não iniciar workers, enviar e-mails ou chamar serviços reais por efeito colateral de testes.
+O bootstrap `tests/bootstrap.php` exige APP_ENV=testing e impede carregar um cache específico de testes. Os caminhos de cache de configuração e rotas são separados dos caches de desenvolvimento. Sessão e cache usam array, e-mail array, filas sync e logs null. Testes de contrato usam spies quando apropriado; a auditoria de segurança captura registros Monolog reais. Não iniciar workers, enviar e-mails ou chamar serviços reais por efeito colateral de testes.
 
 `composer test` chama PHPUnit diretamente e não executa `artisan config:clear` sobre o ambiente de desenvolvimento. A chave fixa é exclusiva dos testes, sem segredo real. A configuração de persistência exclusiva está definida na seção da #28 abaixo; unitários e contratos sem persistência continuam sem consultar banco.
 
@@ -52,7 +52,7 @@ docker compose exec api composer test
 
 A configuração PHPUnit força pgsql, banco/usuário de teste e DB_URL vazio. Tests\TestCase verifica essas condições ao criar a aplicação, antes de RefreshDatabase executar migrations. Cache/rotas de teste ficam separados. Não altere essa proteção para apontar a suíte ao banco `bacurim`.
 
-`RefreshDatabase` prepara o schema pelas migrations existentes na primeira utilização e usa transações para desfazer dados de cada teste. O processo precisa de privilégios para criar/limpar tabelas somente no banco descartável. Não execute `migrate:fresh` manualmente no serviço de desenvolvimento. Factories criam somente os registros necessários, sem seed automático compartilhado. Os testes atuais usam o modelo User do skeleton, sem implementar usuários/tenancy de negócio.
+`RefreshDatabase` prepara o schema pelas migrations existentes na primeira utilização e usa transações para desfazer dados de cada teste. O processo precisa de privilégios para criar/limpar tabelas somente no banco descartável. Não execute `migrate:fresh` manualmente no serviço de desenvolvimento. Factories criam somente os registros necessários, sem seed automático compartilhado. As suítes atuais também usam usuários, organizações e vínculos reais do domínio implementado.
 
 `PostgreSqlPersistenceTest` verifica migrations, criação por factory, rollback entre casos e constraint única real do PostgreSQL. A suíte pode ser repetida sem depender dos dados anteriores. O modo paralelo ainda não está configurado: cada processo concorrente exigirá banco/serviço próprio e revisão da proteção, não compartilhar esse banco entre workers concorrentes.
 
@@ -125,7 +125,7 @@ docker compose exec api composer install
 docker compose exec api composer check
 ```
 
-`composer check` executa, em ordem, validação estrita do Composer, Pint sem modificar fontes, PHPStan/Larastan e a suíte completa PHPUnit (incluindo arquitetura e integração PostgreSQL). Retorna no primeiro comando com falha e propaga código diferente de zero, no ambiente local e no GitHub Actions.
+`composer check` executa, em ordem, validação estrita do Composer, Pint sem modificar fontes, PHPStan/Larastan e a suíte completa PHPUnit em duas partições: test:security e test:other (incluindo arquitetura e integração PostgreSQL). Ambos falham se a seleção estiver vazia. Retorna no primeiro comando com falha e propaga código diferente de zero, no ambiente local e no GitHub Actions.
 
 Comandos individuais:
 
@@ -156,3 +156,9 @@ A suíte completa precisa de PostgreSQL e Redis exclusivos; o kernel HTTP roda e
 Resultados finais e números de testes devem ser consultados na execução atual, não tratados como uma meta fixa de cobertura. O pipeline executa os mesmos comandos locais.
 
 O bootstrap sincroniza as variáveis forçadas de phpunit.xml em getenv, $_ENV e $_SERVER, pois Laravel pode priorizar $_SERVER. A validação final também executa contratos HTTP com APP_ENV=production, DB_DATABASE=bacurim e CACHE_STORE=redis herdados do processo; as configurações de teste devem prevalecer. A guarda de banco permanece ativa como segunda defesa antes das migrations.
+
+## Consolidação de segurança (#79)
+
+composer test:security seleciona o grupo security de identidade, sessões, autorização, isolamento, concorrência, erros e logs. composer test:other executa o complemento; composer check exige ambos, sem duplicar testes. composer test mantém a execução única de toda a suíte. Testes novos que protegem esses contratos devem receber Group('security').
+
+O CI exige também composer audit --locked --no-interaction. Consulte [critérios de segurança e liberação](security-release-criteria.md) para a matriz implementada, riscos residuais e checklist dos módulos financeiros.

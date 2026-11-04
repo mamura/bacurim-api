@@ -8,9 +8,11 @@ use App\Modules\IdentityAccess\Infrastructure\Persistence\Eloquent\Models\UserRe
 use App\Modules\Organizations\Infrastructure\Persistence\Eloquent\Models\OrganizationRecord;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Support\StatefulBrowser;
 use Tests\TestCase;
 
+#[Group('security')]
 class MembershipSecurityTest extends TestCase
 {
     use RefreshDatabase,StatefulBrowser;

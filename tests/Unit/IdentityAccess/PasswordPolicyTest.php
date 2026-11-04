@@ -6,8 +6,10 @@ use App\Modules\IdentityAccess\Application\Security\PasswordHash;
 use App\Modules\IdentityAccess\Application\Security\PasswordPolicy;
 use App\SharedKernel\Application\Exceptions\ApplicationFailure;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('security')]
 class PasswordPolicyTest extends TestCase
 {
     public static function invalidPasswords(): array

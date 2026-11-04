@@ -8,8 +8,10 @@ use App\Modules\IdentityAccess\Domain\MembershipRole;
 use App\Modules\IdentityAccess\Domain\MembershipStatus;
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('security')]
 class OrganizationMembershipTest extends TestCase
 {
     private const UUID = 'c4ca63e2-92a4-4c17-bf34-c08753927800';

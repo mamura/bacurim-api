@@ -81,7 +81,9 @@ jobs:
           restore-keys: ${{ runner.os }}-php83-composer-
       - name: Install locked dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
-      - name: Run quality checks
+      - name: Audit locked dependencies
+        run: composer audit --locked --no-interaction
+      - name: Run quality and security regressions
         run: composer check
       - name: PostgreSQL readiness diagnostics on failure
         if: failure()

@@ -83,8 +83,11 @@
       "@composer validate --strict",
       "@format:check",
       "@analyse",
-      "@test"
-    ]
+      "@test:security",
+      "@test:other"
+    ],
+    "test:security": "@test --group=security --fail-on-empty-test-suite",
+    "test:other": "@test --exclude-group=security --fail-on-empty-test-suite"
   },
   "extra": {
     "laravel": {

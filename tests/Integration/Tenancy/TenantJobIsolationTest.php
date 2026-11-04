@@ -16,6 +16,7 @@ use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\Group;
 use RuntimeException;
 use Tests\Support\MembershipTestActor;
 use Tests\Support\Tenancy\ProbeSchema;
@@ -24,6 +25,7 @@ use Tests\Support\Tenancy\ScopedProbeRepository;
 use Tests\Support\Tenancy\TenantProbeJob;
 use Tests\TestCase;
 
+#[Group('security')]
 class TenantJobIsolationTest extends TestCase
 {
     use MembershipTestActor,RefreshDatabase;

@@ -9,8 +9,10 @@ use App\Modules\IdentityAccess\Application\UseCases\LogoutUser;
 use App\Modules\IdentityAccess\Domain\ValueObjects\EmailAddress;
 use App\SharedKernel\Application\Exceptions\ApplicationFailure;
 use App\SharedKernel\Application\Exceptions\FailureKind;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('security')]
 class AuthenticationUseCasesTest extends TestCase
 {
     public function test_invalid_email_never_reaches_session_adapter(): void

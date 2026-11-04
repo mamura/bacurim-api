@@ -5,8 +5,10 @@ namespace Tests\Integration\IdentityAccess;
 use Illuminate\Session\CacheBasedSessionHandler;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Session;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+#[Group('security')]
 class RedisSessionTest extends TestCase
 {
     public function test_isolated_redis_persists_encrypted_sessions_and_expires_them(): void
