@@ -39,3 +39,17 @@ Eventos nativos de autenticação do Laravel podem conter dados sensíveis; não
 GET /api/v1/auth/me exige auth:sanctum e devolve 200 com os mesmos campos públicos de login: data.public_id, name, email, status e email_verified_at. Não inclui versão/ID interno, organização ou permissões. Autenticação não concede autorização a uma organização.
 
 Sem sessão válida, com cookie corrompido, sessão expirada no backend ou cookie autenticado anterior ao logout, retorna 401 Problem Details. Bearer tokens são ignorados e não provocam consulta a tabela de tokens. O teste faz login real e reapresenta cookies entre requisições sem actingAs.
+
+## Políticas de segurança (#57)
+
+Login permite 5 tentativas por minuto por e-mail normalizado+IP e 30 por minuto por IP, incluindo tentativas válidas. Limites têm chaves HMAC, não e-mails/IPs em texto puro, e usam Redis central (store auth_limits) fora dos testes. 429 segue Problem Details e preserva Retry-After; não bloqueia permanentemente uma conta. O PHPUnit usa store array isolado e relógio controlado para a janela de limites.
+
+TRUSTED_PROXIES aceita apenas IPs/CIDRs explícitos do proxy, nunca *. Headers Forwarded-For/Proto/Port só são usados quando o peer é confiável; Host encaminhado não é aceito. No ambiente local foi configurado o IP observado do Traefik (172.18.0.2). Rever essa configuração se a rede/container for recriado; em produção preencher os endereços efetivos do proxy.
+
+Rotas protegidas exigem auth:sanctum e auth.session.valid. A cada operação são relidos estado e versão da identidade. Inativo, versão divergente, carimbo ausente ou idade absoluta de 12 horas invalidam a sessão e retornam 401. A expiração por inatividade continua 120 minutos no backend.
+
+A política inicial é intencionalmente ampla: qualquer alteração da identidade pelos casos de uso (perfil, estado ou senha) muda version e revoga as sessões anteriores na próxima requisição, inclusive se o usuário for desativado e reativado antes disso. Rehash no login captura a nova versão. Não há logout por perfil de dispositivo ou promise de revogação por alteração SQL que ignore os casos de uso/version.
+
+O authorizer interno de troca de senha agora aceita apenas o próprio ator ativo de um request autenticado e validado por auth.session.valid. O contexto é removido ao sair da operação. Fora desse request, segue negado por padrão; não há novo endpoint público de senha nesta milestone.
+
+Respostas de autenticação/CSRF usam Cache-Control:no-store,private e Pragma:no-cache, inclusive erros. Cookies continuam HttpOnly para a sessão, Lax e Secure obrigatório em produção. Não copiar cookies/tokens para logs ou armazenamento JavaScript.
