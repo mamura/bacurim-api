@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Modules\IdentityAccess\Infrastructure\Persistence\Eloquent\Models\UserRecord;
 
 return [
 
@@ -63,8 +64,8 @@ return [
 
     'providers' => [
         'users' => [
-            'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
+            'driver' => 'bacurim-identity',
+            'model' => UserRecord::class,
         ],
 
         // 'users' => [
