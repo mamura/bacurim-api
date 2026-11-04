@@ -16,7 +16,7 @@ final readonly class NormalizeApiErrors
     {
         $response = $next($request);
 
-        if ($request->is('api', 'api/*') && $response->getStatusCode() >= 400
+        if ($request->is('api', 'api/*', 'sanctum/csrf-cookie') && $response->getStatusCode() >= 400
             && ! str_starts_with((string) $response->headers->get('Content-Type'), 'application/problem+json')) {
             return $this->problems->render(new HttpException(
                 $response->getStatusCode(), headers: $response->headers->all(),

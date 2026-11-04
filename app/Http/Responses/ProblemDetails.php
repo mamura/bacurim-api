@@ -17,7 +17,7 @@ final class ProblemDetails
 {
     public function render(Throwable $exception, Request $request): ?JsonResponse
     {
-        if (! $request->is('api', 'api/*')) {
+        if (! $request->is('api', 'api/*', 'sanctum/csrf-cookie')) {
             return null;
         }
 
