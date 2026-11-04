@@ -19,3 +19,13 @@ organizations usa bigint interno, uuid único, nomes varchar(255), documento var
 ## Persistência (#42)
 
 OrganizationRepository define create, findByPublicId e update na Application. O adaptador Eloquent devolve entidades, preserva timestamps e UUID, e fica registrado no OrganizationsServiceProvider. Consultas inexistentes ou UUID inválido retornam null. Criação usa transação e traduz colisão de UUID em organizations.public_id_conflict. Atualização nunca faz upsert: exige registro existente e a mesma versão. Usa transação e lock de linha, incrementa version e rejeita snapshots desatualizados com organizations.concurrent_update, inclusive quando os timestamps coincidem. Não há exclusão no contrato. Falhas inesperadas de conexão/SQL continuam internas e não são mascaradas como conflito de negócio.
+
+## Casos de uso internos (#43)
+
+CreateOrganization recebe OrganizationDetails, gera UUID v4 e horário UTC por portas injetadas e devolve OrganizationData. GetOrganization consulta pelo UUID público; ausência e formato inválido resultam em organizations.not_found.
+
+UpdateOrganization recebe UUID, OrganizationDetails e expectedVersion obrigatório. A entrada substitui todos os detalhes e null limpa opcionais. ChangeOrganizationStatus recebe UUID, enum de estado e expectedVersion. Ambos verificam a versão do chamador e o repositório repete a proteção dentro da transação, cobrindo a janela entre leitura e gravação. Repetir o mesmo estado é permitido, mantendo uma nova versão da operação.
+
+DTO de saída não expõe chave interna nem modelo Eloquent; inclui UUID, detalhes, estado, datas e versão. Documento pode conter dado pessoal: DTO é interno e não deve ser registrado em logs ou exposto por futuro endpoint sem contrato/autorização. Invariantes inválidas viram ApplicationFailure Validation (organizations.invalid), ausência NotFound e colisão/concorrência Conflict, compatíveis com o tradutor HTTP central.
+
+Essas capacidades são internas e não fazem autorização de usuário. Nenhuma rota, cadastro público, owner implícito ou membership foi criado. Futuros adaptadores devem validar acesso antes de invocar as operações; UUID conhecido não prova acesso.
