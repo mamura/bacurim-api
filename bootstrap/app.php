@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\ApiSecurityHeaders;
 use App\Http\Middleware\EnsureValidJson;
 use App\Http\Middleware\NormalizeApiErrors;
 use App\Http\Responses\ProblemDetails;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prepend(ApiSecurityHeaders::class);
         $middleware->append(NormalizeApiErrors::class);
         $middleware->statefulApi();
         $middleware->trimStrings(except: ['new_password']);
