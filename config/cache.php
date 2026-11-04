@@ -72,6 +72,9 @@ return [
             ],
         ],
 
+        'auth_sessions' => [
+            'driver' => 'redis', 'connection' => 'sessions', 'prefix' => 'bacurim_auth_sessions_',
+        ],
         'redis' => [
             'driver' => 'redis',
             'connection' => env('REDIS_CACHE_CONNECTION', 'cache'),
