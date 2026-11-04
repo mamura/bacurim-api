@@ -6,6 +6,8 @@ use App\Modules\IdentityAccess\Application\Contracts\MembershipActor;
 use App\Modules\IdentityAccess\Application\Contracts\MembershipTransaction;
 use App\Modules\IdentityAccess\Application\Contracts\MembershipUsers;
 use App\Modules\IdentityAccess\Application\Contracts\Persistence\MembershipRepository;
+use App\Modules\IdentityAccess\Application\Contracts\PublicApi\TenantAuthorization;
+use App\Modules\IdentityAccess\Application\Contracts\PublicApi\TenantCapability;
 use App\Modules\IdentityAccess\Application\Data\MembershipData;
 use App\Modules\IdentityAccess\Application\Data\UserData;
 use App\Modules\IdentityAccess\Domain\Entities\OrganizationMembership;
@@ -19,6 +21,7 @@ use App\Modules\Organizations\Application\Contracts\PublicApi\OrganizationDirect
 use App\Modules\Organizations\Application\Contracts\PublicApi\OrganizationSnapshot;
 use App\SharedKernel\Application\Exceptions\ApplicationFailure;
 use App\SharedKernel\Application\Exceptions\FailureKind;
+use App\SharedKernel\Application\Tenancy\TenantContext;
 use LogicException;
 
 final readonly class MembershipAccess
@@ -28,7 +31,18 @@ final readonly class MembershipAccess
         public MembershipUsers $memberUsers, public OrganizationDirectory $organizations,
         public MembershipTransaction $transaction, private MembershipActor $actor,
         private MembershipPolicy $policy,
+        private TenantAuthorization $tenantAuthorization,
     ) {}
+
+    /** @param list<string> $extraUsers */
+    public function forContext(TenantContext $context, array $extraUsers = []): OrganizationSnapshot
+    {
+        $organization = $this->organization($context->organizationPublicId);
+        $this->lockOrganizationUsers($organization, [...$extraUsers, $context->actorPublicId]);
+        $this->tenantAuthorization->authorize($context, TenantCapability::ManageMembers);
+
+        return $organization;
+    }
 
     public function actor(): User
     {
@@ -55,7 +69,7 @@ final readonly class MembershipAccess
     /** @param list<string> $extraUsers */
     public function lockOrganizationUsers(OrganizationSnapshot $organization, array $extraUsers = []): void
     {
-        $ids = [...$extraUsers, $this->actor->identity()->publicId];
+        $ids = $extraUsers;
         foreach ($this->memberships->forOrganization($organization->id) as $member) {
             $ids[] = $this->requireUser($member->userId)->publicId;
         }
@@ -81,7 +95,7 @@ final readonly class MembershipAccess
 
     public function target(OrganizationSnapshot $organization, string $publicId, int $version): OrganizationMembership
     {
-        $member = $this->memberships->findByPublicId($publicId);
+        $member = $this->memberships->findInOrganization($organization->id, $publicId);
         if ($member === null || $member->organizationId !== $organization->id) {
             throw new ApplicationFailure(FailureKind::NotFound, 'memberships.not_found', 'Membership not found.');
         }

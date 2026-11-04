@@ -10,7 +10,7 @@ interface MembershipRepository
 
     public function update(OrganizationMembership $membership): OrganizationMembership;
 
-    public function findByPublicId(string $publicId): ?OrganizationMembership;
+    public function findInOrganization(int $organizationId, string $publicId): ?OrganizationMembership;
 
     public function findForUser(int $organizationId, int $userId): ?OrganizationMembership;
 

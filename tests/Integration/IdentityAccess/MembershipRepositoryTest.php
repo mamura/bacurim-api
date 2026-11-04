@@ -40,11 +40,12 @@ class MembershipRepositoryTest extends TestCase
         $second = $this->repository()->create($this->newMembership(user: $first->userId));
         $this->assertSame(1, $first->version);
         $this->assertSame('123456', $first->createdAt->format('u'));
-        $this->assertEquals($first, $this->repository()->findByPublicId(strtoupper($first->publicId)));
+        $this->assertEquals($first, $this->repository()->findInOrganization($first->organizationId, strtoupper($first->publicId)));
         $this->assertEquals([$first], $this->repository()->forOrganization($first->organizationId));
         $this->assertEquals([$first, $second], $this->repository()->forUser($first->userId));
         $this->assertEquals($first, $this->repository()->findActive($first->organizationId, $first->userId));
-        $this->assertNull($this->repository()->findByPublicId('invalid'));
+        $this->assertNull($this->repository()->findInOrganization($first->organizationId, 'invalid'));
+        $this->assertNull($this->repository()->findInOrganization($first->organizationId, $second->publicId));
         $this->assertNull($this->repository()->findForUser($first->organizationId, $second->userId + 10000));
     }
 

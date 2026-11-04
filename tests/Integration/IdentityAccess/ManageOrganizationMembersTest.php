@@ -53,31 +53,31 @@ class ManageOrganizationMembersTest extends TestCase
         $owner = $this->owner();
         $org = OrganizationRecord::query()->findOrFail($owner->organization_id);
         $user = UserRecord::factory()->create();
-        $added = $this->service()->add($org->public_id, $user->public_id, MembershipRole::Member);
+        $added = $this->service()->add($this->context($org), $user->public_id, MembershipRole::Member);
         $this->assertSame($user->public_id, $added->userPublicId);
-        $this->assertCount(2, $this->service()->list($org->public_id));
-        $changed = $this->service()->changeRole($org->public_id, $added->publicId, MembershipRole::Admin, 1);
+        $this->assertCount(2, $this->service()->list($this->context($org)));
+        $changed = $this->service()->changeRole($this->context($org), $added->publicId, MembershipRole::Admin, 1);
         $this->assertSame('admin', $changed->role);
-        $revoked = $this->service()->revoke($org->public_id, $added->publicId, 2);
+        $revoked = $this->service()->revoke($this->context($org), $added->publicId, 2);
         $this->assertSame('revoked', $revoked->status);
-        $this->failWith('memberships.duplicate', fn () => $this->service()->add($org->public_id, $user->public_id, MembershipRole::Viewer));
-        $active = $this->service()->activate($org->public_id, $added->publicId, 3);
+        $this->failWith('memberships.duplicate', fn () => $this->service()->add($this->context($org), $user->public_id, MembershipRole::Viewer));
+        $active = $this->service()->activate($this->context($org), $added->publicId, 3);
         $this->assertSame('active', $active->status);
         $this->assertSame(4, $active->version);
         $this->assertDatabaseCount('organization_memberships', 2);
-        $this->failWith('memberships.concurrent_update', fn () => $this->service()->changeRole($org->public_id, $added->publicId, MembershipRole::Viewer, 1));
+        $this->failWith('memberships.concurrent_update', fn () => $this->service()->changeRole($this->context($org), $added->publicId, MembershipRole::Viewer, 1));
     }
 
     public function test_last_owner_cannot_be_revoked_or_demoted_but_another_active_owner_allows_it(): void
     {
         $owner = $this->owner();
         $org = OrganizationRecord::query()->findOrFail($owner->organization_id);
-        $this->failWith('memberships.last_owner', fn () => $this->service()->revoke($org->public_id, $owner->public_id, 1));
-        $this->failWith('memberships.last_owner', fn () => $this->service()->changeRole($org->public_id, $owner->public_id, MembershipRole::Admin, 1));
+        $this->failWith('memberships.last_owner', fn () => $this->service()->revoke($this->context($org), $owner->public_id, 1));
+        $this->failWith('memberships.last_owner', fn () => $this->service()->changeRole($this->context($org), $owner->public_id, MembershipRole::Admin, 1));
         MembershipRecord::factory()->create(['organization_id' => $org->id, 'role' => MembershipRole::Owner]);
-        $changed = $this->service()->changeRole($org->public_id, $owner->public_id, MembershipRole::Viewer, 1);
+        $changed = $this->service()->changeRole($this->context($org), $owner->public_id, MembershipRole::Viewer, 1);
         $this->assertSame('viewer', $changed->role);
-        $this->failWith('memberships.forbidden', fn () => $this->service()->list($org->public_id));
+        $this->failWith('tenant.forbidden', fn () => $this->service()->list($this->context($org)));
     }
 
     public function test_inactive_or_revoked_other_owner_does_not_satisfy_last_owner_guard(): void
@@ -86,7 +86,7 @@ class ManageOrganizationMembersTest extends TestCase
         $org = OrganizationRecord::query()->findOrFail($owner->organization_id);
         MembershipRecord::factory()->revoked()->create(['organization_id' => $org->id, 'role' => MembershipRole::Owner]);
         MembershipRecord::factory()->create(['organization_id' => $org->id, 'role' => MembershipRole::Owner, 'user_id' => UserRecord::factory()->inactive()]);
-        $this->failWith('memberships.last_owner', fn () => $this->service()->revoke($org->public_id, $owner->public_id, 1));
+        $this->failWith('memberships.last_owner', fn () => $this->service()->revoke($this->context($org), $owner->public_id, 1));
     }
 
     public function test_admin_cannot_create_change_revoke_or_reactivate_owner(): void
@@ -97,12 +97,12 @@ class ManageOrganizationMembersTest extends TestCase
         $owner = MembershipRecord::factory()->create(['organization_id' => $org->id, 'role' => MembershipRole::Owner]);
         $revoked = MembershipRecord::factory()->revoked()->create(['organization_id' => $org->id, 'role' => MembershipRole::Owner]);
         $user = UserRecord::factory()->create();
-        $this->failWith('memberships.forbidden', fn () => $this->service()->add($org->public_id, $user->public_id, MembershipRole::Owner));
-        $this->failWith('memberships.forbidden', fn () => $this->service()->changeRole($org->public_id, $admin->public_id, MembershipRole::Owner, 1));
-        $this->failWith('memberships.forbidden', fn () => $this->service()->changeRole($org->public_id, $owner->public_id, MembershipRole::Viewer, 1));
-        $this->failWith('memberships.forbidden', fn () => $this->service()->revoke($org->public_id, $owner->public_id, 1));
-        $this->failWith('memberships.forbidden', fn () => $this->service()->activate($org->public_id, $revoked->public_id, 1));
-        $this->assertSame('member', $this->service()->add($org->public_id, $user->public_id, MembershipRole::Member)->role);
+        $this->failWith('memberships.forbidden', fn () => $this->service()->add($this->context($org), $user->public_id, MembershipRole::Owner));
+        $this->failWith('memberships.forbidden', fn () => $this->service()->changeRole($this->context($org), $admin->public_id, MembershipRole::Owner, 1));
+        $this->failWith('memberships.forbidden', fn () => $this->service()->changeRole($this->context($org), $owner->public_id, MembershipRole::Viewer, 1));
+        $this->failWith('memberships.forbidden', fn () => $this->service()->revoke($this->context($org), $owner->public_id, 1));
+        $this->failWith('memberships.forbidden', fn () => $this->service()->activate($this->context($org), $revoked->public_id, 1));
+        $this->assertSame('member', $this->service()->add($this->context($org), $user->public_id, MembershipRole::Member)->role);
     }
 
     public static function deniedRoles(): array
@@ -116,8 +116,8 @@ class ManageOrganizationMembersTest extends TestCase
         $member = $this->owner();
         $member->forceFill(['role' => $role])->save();
         $org = OrganizationRecord::query()->findOrFail($member->organization_id);
-        $this->failWith('memberships.forbidden', fn () => $this->service()->list($org->public_id));
-        $this->failWith('memberships.forbidden', fn () => $this->service()->changeRole($org->public_id, $member->public_id, MembershipRole::Owner, 1));
+        $this->failWith('tenant.forbidden', fn () => $this->service()->list($this->context($org)));
+        $this->failWith('tenant.forbidden', fn () => $this->service()->changeRole($this->context($org), $member->public_id, MembershipRole::Owner, 1));
     }
 
     public function test_scope_revocation_inactive_references_and_user_organizations_are_checked_live(): void
@@ -128,12 +128,12 @@ class ManageOrganizationMembersTest extends TestCase
         $otherOrg = OrganizationRecord::query()->findOrFail($other->organization_id);
         $listed = app(ListUserOrganizations::class)->execute();
         $this->assertSame(['owner', 'viewer'], array_column($listed, 'role'));
-        $this->failWith('memberships.forbidden', fn () => $this->service()->list($otherOrg->public_id));
-        $this->failWith('memberships.not_found', fn () => $this->service()->revoke($org->public_id, $other->public_id, 1));
+        $this->failWith('tenant.forbidden', fn () => $this->service()->list($this->context($otherOrg)));
+        $this->failWith('memberships.not_found', fn () => $this->service()->revoke($this->context($org), $other->public_id, 1));
         $inactive = UserRecord::factory()->inactive()->create();
-        $this->failWith('memberships.inactive_user', fn () => $this->service()->add($org->public_id, $inactive->public_id, MembershipRole::Member));
+        $this->failWith('memberships.inactive_user', fn () => $this->service()->add($this->context($org), $inactive->public_id, MembershipRole::Member));
         $org->forceFill(['status' => 'inactive'])->save();
-        $this->failWith('memberships.forbidden', fn () => $this->service()->list($org->public_id));
+        $this->failWith('tenant.forbidden', fn () => $this->service()->list($this->context($org)));
         $this->assertCount(1, app(ListUserOrganizations::class)->execute());
         $other->forceFill(['status' => MembershipStatus::Revoked, 'revoked_at' => $other->updated_at])->save();
         $this->assertSame([], app(ListUserOrganizations::class)->execute());

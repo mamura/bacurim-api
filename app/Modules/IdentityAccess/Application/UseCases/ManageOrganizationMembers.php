@@ -12,29 +12,28 @@ use App\Modules\IdentityAccess\Domain\MembershipRole;
 use App\Modules\Organizations\Application\Contracts\PublicApi\OrganizationSnapshot;
 use App\SharedKernel\Application\Exceptions\ApplicationFailure;
 use App\SharedKernel\Application\Exceptions\FailureKind;
+use App\SharedKernel\Application\Tenancy\TenantContext;
 
 final readonly class ManageOrganizationMembers
 {
     public function __construct(private MembershipAccess $access, private IdentityClock $clock, private IdentityIdGenerator $ids) {}
 
     /** @return list<MembershipData> */
-    public function list(string $organizationPublicId): array
+    public function list(TenantContext $context): array
     {
-        return $this->access->transaction->run(function () use ($organizationPublicId): array {
-            $org = $this->access->organization($organizationPublicId);
-            $this->access->lockOrganizationUsers($org);
-            $this->access->authorize($org, $this->access->actor());
+        return $this->access->transaction->run(function () use ($context): array {
+            $org = $this->access->forContext($context);
+            $this->access->authorize($org, $this->access->users->get($context->actorPublicId));
 
             return array_map(fn (OrganizationMembership $member): MembershipData => $this->access->data($org, $member), $this->access->memberships->forOrganization($org->id));
         });
     }
 
-    public function add(string $organizationPublicId, string $userPublicId, MembershipRole $role): MembershipData
+    public function add(TenantContext $context, string $userPublicId, MembershipRole $role): MembershipData
     {
-        return $this->access->transaction->run(function () use ($organizationPublicId, $userPublicId, $role): MembershipData {
-            $org = $this->access->organization($organizationPublicId);
-            $this->access->lockOrganizationUsers($org, [$userPublicId]);
-            $actor = $this->access->authorize($org, $this->access->actor());
+        return $this->access->transaction->run(function () use ($context, $userPublicId, $role): MembershipData {
+            $org = $this->access->forContext($context, [$userPublicId]);
+            $actor = $this->access->authorize($org, $this->access->users->get($context->actorPublicId));
             $this->access->targetPermission($org, $actor, null, $role);
             $user = $this->access->users->get($userPublicId);
             $this->access->requireActive($user);
@@ -47,9 +46,9 @@ final readonly class ManageOrganizationMembers
         });
     }
 
-    public function changeRole(string $organizationPublicId, string $membershipPublicId, MembershipRole $role, int $expectedVersion): MembershipData
+    public function changeRole(TenantContext $context, string $membershipPublicId, MembershipRole $role, int $expectedVersion): MembershipData
     {
-        return $this->mutate($organizationPublicId, $membershipPublicId, $expectedVersion, function (OrganizationSnapshot $org, OrganizationMembership $actor, OrganizationMembership $target) use ($role): OrganizationMembership {
+        return $this->mutate($context, $membershipPublicId, $expectedVersion, function (OrganizationSnapshot $org, OrganizationMembership $actor, OrganizationMembership $target) use ($role): OrganizationMembership {
             $this->access->targetPermission($org, $actor, $target->role, $role);
             if ($role !== MembershipRole::Owner) {
                 $this->access->protectOwner($target);
@@ -59,9 +58,9 @@ final readonly class ManageOrganizationMembers
         });
     }
 
-    public function activate(string $organizationPublicId, string $membershipPublicId, int $expectedVersion): MembershipData
+    public function activate(TenantContext $context, string $membershipPublicId, int $expectedVersion): MembershipData
     {
-        return $this->mutate($organizationPublicId, $membershipPublicId, $expectedVersion, function (OrganizationSnapshot $org, OrganizationMembership $actor, OrganizationMembership $target): OrganizationMembership {
+        return $this->mutate($context, $membershipPublicId, $expectedVersion, function (OrganizationSnapshot $org, OrganizationMembership $actor, OrganizationMembership $target): OrganizationMembership {
             $this->access->targetPermission($org, $actor, $target->role, $target->role);
             $this->access->requireActive($this->access->requireUser($target->userId));
 
@@ -69,9 +68,9 @@ final readonly class ManageOrganizationMembers
         });
     }
 
-    public function revoke(string $organizationPublicId, string $membershipPublicId, int $expectedVersion): MembershipData
+    public function revoke(TenantContext $context, string $membershipPublicId, int $expectedVersion): MembershipData
     {
-        return $this->mutate($organizationPublicId, $membershipPublicId, $expectedVersion, function (OrganizationSnapshot $org, OrganizationMembership $actor, OrganizationMembership $target): OrganizationMembership {
+        return $this->mutate($context, $membershipPublicId, $expectedVersion, function (OrganizationSnapshot $org, OrganizationMembership $actor, OrganizationMembership $target): OrganizationMembership {
             $this->access->targetPermission($org, $actor, $target->role, $target->role);
             $this->access->protectOwner($target);
 
@@ -80,12 +79,11 @@ final readonly class ManageOrganizationMembers
     }
 
     /** @param callable(OrganizationSnapshot,OrganizationMembership,OrganizationMembership):OrganizationMembership $change */
-    private function mutate(string $organizationPublicId, string $membershipPublicId, int $expectedVersion, callable $change): MembershipData
+    private function mutate(TenantContext $context, string $membershipPublicId, int $expectedVersion, callable $change): MembershipData
     {
-        return $this->access->transaction->run(function () use ($organizationPublicId, $membershipPublicId, $expectedVersion, $change): MembershipData {
-            $org = $this->access->organization($organizationPublicId);
-            $this->access->lockOrganizationUsers($org);
-            $actor = $this->access->authorize($org, $this->access->actor());
+        return $this->access->transaction->run(function () use ($context, $membershipPublicId, $expectedVersion, $change): MembershipData {
+            $org = $this->access->forContext($context);
+            $actor = $this->access->authorize($org, $this->access->users->get($context->actorPublicId));
             $target = $this->access->target($org, $membershipPublicId, $expectedVersion);
             try {
                 $changed = $change($org, $actor, $target);

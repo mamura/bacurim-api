@@ -15,7 +15,7 @@ final class ArchitectureInspector
     private const EDGES = [
         'IdentityAccess' => ['Organizations'],
         'Organizations' => [],
-        'Financial' => [],
+        'Financial' => ['IdentityAccess'],
         'DataImport' => ['Financial'],
         'Reporting' => ['Financial'],
         'Forecasting' => ['Financial'],
