@@ -128,4 +128,17 @@ class TenantJobIsolationTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         new TenantJobIdentity((string) Str::uuid(), '');
     }
+
+    public function test_inactive_actor_prevents_queued_operation_before_any_effect(): void
+    {
+        [$member,$org,$context,$identity] = $this->fixture();
+        UserRecord::query()->whereKey($member->user_id)->update(['status' => 'inactive', 'version' => 2]);
+        try {
+            $this->dispatch(new TenantProbeJob($identity, 'Denied'));
+            $this->fail('Expected inactive actor denial');
+        } catch (ApplicationFailure $failure) {
+            $this->assertSame('tenant.unauthenticated', $failure->errorCode);
+        }
+        $this->assertDatabaseCount('tenant_isolation_probes', 0);
+    }
 }

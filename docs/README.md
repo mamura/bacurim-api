@@ -15,7 +15,7 @@
 - [Camadas](architecture-layers.md): Domain, Application, Infrastructure e Interfaces.
 - [Estrutura modular](modular-structure.md): namespaces, diretórios e expansão.
 - [Integrações e providers](module-integration.md): contratos públicos, bindings e eventos.
-- [Shared Kernel e tenancy](shared-kernel-and-tenancy.md): contexto explícito e regras de isolamento; resolução real ainda não implementada.
+- [Shared Kernel e tenancy](shared-kernel-and-tenancy.md): contexto explícito e regras atuais de isolamento.
 
 ## Domínios implementados
 
@@ -29,6 +29,11 @@
 - [Matriz de permissões](memberships-authorization.md): Owner, Admin, Member e Viewer por organização.
 - [API de membros](memberships-http.md): endpoints, entradas, respostas, CSRF e autorização.
 
+- [Contexto de tenant](tenant-context.md): rota, autorização atual e passagem aos casos de uso.
+- [Persistência isolada](tenant-persistence.md): consultas/escritas com escopo e integridade PostgreSQL.
+- [Jobs por organização](tenant-jobs.md): reconstrução/revalidação sem sessão HTTP.
+- [Segurança de tenant](tenant-security.md): controles, evidências e limites.
+
 ## Decisões e contratos
 
 - [Decisões tecnológicas iniciais](initial-technical-decisions.md).
@@ -36,6 +41,7 @@
 - [ADR-0002: camadas e composição](adr/0002-layers-and-composition.md).
 - [ADR-0003: contexto de tenant](adr/0003-explicit-tenant-context.md).
 - [ADR-0004: organização e evolução da identidade](adr/0004-organization-identity-evolution.md).
+- [ADR-0005: tenant explícito e PostgreSQL compartilhado](adr/0005-tenant-context-and-shared-postgresql.md).
 - [Contratos HTTP](http-api.md): REST, respostas, paginação, precisão, erros e exemplos.
 
 Os documentos de produto externos estão identificados e sintetizados no mapa dos contextos. Este repositório contém a referência técnica necessária para seguir o desenvolvimento, mas não os arquivos de infraestrutura do workspace nem credenciais locais.

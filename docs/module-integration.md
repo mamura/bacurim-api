@@ -37,7 +37,7 @@ As três linhas representam alternativas, não bindings de produção existentes
 
 Não usar facades, `app()`, `resolve()` ou o container como service locator dentro de Domain/Application. Usar o container no bootstrap/provider e no suporte de testes é composição, não uma permissão geral para resolver dependências em qualquer classe.
 
-O provider não deve inferir tenant a partir de uma variável global nem escolher uma implementação diferente por usuário durante o bootstrap. Os mecanismos de resolução/autorização reais serão definidos no API-M1; a #17 estabelece os princípios do contexto.
+O provider não deve inferir tenant a partir de uma variável global nem escolher uma implementação diferente por usuário durante o bootstrap. Os mecanismos atuais estão no ADR-0005 e nos guias de tenant (#66); a #17 registrou os princípios iniciais.
 
 ## Comunicação síncrona
 
@@ -46,6 +46,7 @@ O mapa admite somente estas dependências públicas entre módulos:
 | Consumidor | Fornecedor | Integração |
 | --- | --- | --- |
 | `IdentityAccess` | `Organizations` | Consultas/operações públicas necessárias sobre o contexto de tenant/empresa. |
+| `Financial` | `IdentityAccess` | Revalidar capacidades por TenantAuthorization e reconstruir contexto em TenantJobRunner, somente pela API pública. |
 | `DataImport` | `Financial` | Validar e confirmar operações financeiras após preparação dos dados importados. |
 | `Reporting` | `Financial` | Consultar fatos, posição e origens para interpretação e exportação. |
 | `Forecasting` | `Financial` | Consultar posição e compromissos conhecidos para projeção. |
@@ -59,7 +60,7 @@ O fornecedor publica o contrato em `Application/Contracts/PublicApi` e registra 
 - Dados de tenant/ator cruzam a integração explicitamente, com autorização e verificação de pertencimento das referências. O contrato não aceita contexto ausente como acesso irrestrito.
 - Exceções internas não formam automaticamente a API do módulo. Falhas esperadas que precisem atravessar o limite devem ter tipos/resultados públicos documentados; não expor mensagens SQL ou detalhes do framework.
 
-Uma jornada que precise de mais de um módulo usa composição explícita de aplicação na borda do monólito. Se necessário, essa composição fica em um componente de Application fora dos módulos, recebendo seus contratos públicos. Ela não introduz dependência recíproca entre módulos e não usa repositórios internos. Criar esse componente somente quando existir um fluxo real; ainda não há um orquestrador implementado.
+Uma jornada que precise de mais de um módulo usa composição explícita de aplicação na borda do monólito. Se necessário, essa composição fica em um componente de Application fora dos módulos, recebendo seus contratos públicos. Ela não introduz dependência recíproca entre módulos e não usa repositórios internos. Criar esse componente somente quando existir um fluxo real; o onboarding interno em IdentityAccess compõe organização/primeiro Owner pelo contrato público de Organizations.
 
 O contrato deve informar se a operação é atômica. Uma transação de Financial protege suas próprias invariantes. Não pressupor atomicidade global em uma sequência que chama módulos diferentes; decidir rollback, idempotência e tratamento de falhas para o fluxo concreto, sem implementar saga ou infraestrutura distribuída antecipadamente.
 

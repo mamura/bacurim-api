@@ -11,6 +11,7 @@ use ArgumentCountError;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\Support\Tenancy\ProbeSchema;
 use Tests\Support\Tenancy\ScopedProbeRepository;
 use Tests\TestCase;
@@ -113,5 +114,11 @@ class ScopedPersistenceTest extends TestCase
         (new ScopedProbeRepository)->create($context, 'Required FK');
         $this->expectException(QueryException::class);
         DB::transaction(fn () => DB::table('organizations')->where('id', $context->organizationId)->delete());
+    }
+
+    public function test_postgresql_rejects_missing_organizational_owner(): void
+    {
+        $this->expectException(QueryException::class);
+        DB::transaction(fn () => DB::table('tenant_isolation_probes')->insert(['public_id' => (string) Str::uuid(), 'label' => 'Invalid', 'organization_id' => null]));
     }
 }

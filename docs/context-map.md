@@ -1,6 +1,6 @@
 # Mapa dos contextos do Bacurim
 
-> Evolução API-M1: as premissas abaixo de usuário restrito a um tenant e ausência de identidade global são históricas e foram substituídas pelo [ADR-0004](adr/0004-organization-identity-evolution.md). O planejamento prevê identidade global com memberships em múltiplas organizações e PostgreSQL compartilhado; essas capacidades ainda não estão implementadas pela #39.
+> Evolução API-M1 implementada: identidade global e memberships por organização (#45/#59), contexto explícito e PostgreSQL compartilhado (#66). Os ADRs 0004/0005 substituem as premissas de usuário restrito a um tenant.
 
 Definição inicial da issue [#13](https://github.com/mamura/bacurim-api/issues/13), parte da arquitetura da issue [#12](https://github.com/mamura/bacurim-api/issues/12). Os limites abaixo orientam a implementação incremental do monólito modular. Este documento não implementa funcionalidades financeiras nem cria entidades, tabelas ou módulos vazios.
 
@@ -29,7 +29,7 @@ Importação, interpretação de resultados e projeção estão no MVP. Sua impl
 | Módulo | Responsabilidade e conceitos próprios | Fora de sua responsabilidade | Entrega incremental |
 | --- | --- | --- | --- |
 | `Organizations` | Empresa, ciclo de vida e configuração do tenant; relação de um tenant com exatamente uma empresa no MVP. Disponibiliza consultas públicas sobre a existência e situação desse contexto. | Credenciais, autenticação, permissões dos usuários e dados financeiros. Não contém carteira multiempresa ou identidade global. | API-M1 |
-| `IdentityAccess` | Usuários pertencentes a um tenant, autenticação e autorização nesse contexto. Consulta contratos públicos de Organizations quando precisar validar o tenant. | Configuração financeira da empresa, cadastro de contas, cálculo de saldos e acesso global a tenants. Consultor é usuário autorizado comum, sem experiência especializada. | API-M1 |
+| `IdentityAccess` | Identidades globais, autenticação, memberships e autorização por organização. Consulta contratos públicos de Organizations para validar o contexto. | Configuração financeira da empresa, cadastro de contas, cálculo de saldos e acesso global a tenants. Consultor é usuário autorizado comum, sem experiência especializada. | API-M1 |
 | `Financial` | Contas, categorias, eventos econômicos, compromissos, realizações, movimentações, transferências, distribuições, parcelamentos, recorrências e operações de correção histórica. Mantém as invariantes e fornece consultas públicas de fatos e posição financeira. | Autenticação, leitura de arquivos, apresentações de relatórios e cálculo da projeção de 12 meses. Não calcula tributos automaticamente nem implementa escrituração contábil. | API-M2, M3 e M4 |
 | `DataImport` | Arquivos CSV/planilha, mapeamento, preparação, validação de formato, pré-visualização e controle de confirmação dos dados importados. Registra a origem da importação. | Não grava diretamente na persistência financeira nem substitui suas validações. Confirma dados por operações públicas de Financial. Integrações bancárias e ERPs ficam fora do MVP. | API-M5 |
 | `Reporting` | Resultado por competência, leitura de caixa, composição, comparação temporal, indicadores, visão empresa × proprietário e exportação dos principais dados. Mantém a rastreabilidade aos fatos consultados. | Não modifica fatos financeiros, não redefine a natureza de pró-labore/distribuições e não cria uma cópia autoritativa do domínio. | API-M6 |
@@ -58,6 +58,7 @@ A seta representa consumo de contrato público do módulo de destino, sem import
 ```mermaid
 flowchart LR
     IdentityAccess --> Organizations
+    Financial --> IdentityAccess
     DataImport --> Financial
     Reporting --> Financial
     Forecasting --> Financial
@@ -65,7 +66,7 @@ flowchart LR
 
 Não existem arestas de retorno nesse mapa. Financial não depende de importadores, relatórios ou projeções. Organizations não depende de IdentityAccess: quando criar empresa e usuário fizer parte da mesma jornada, uma composição explícita de aplicação chama as operações públicas necessárias; não introduzir chamadas recíprocas entre os módulos.
 
-O contexto de tenant autorizado é uma entrada explícita das operações financeiras. Essa passagem de dados não cria uma dependência de Financial com os serviços de autenticação. A localização das abstrações de contexto e os mecanismos de autorização serão detalhados na #17 e no API-M1.
+O contexto de tenant autorizado é uma entrada explícita das operações financeiras. SharedKernel/Application fornece TenantContext; Financial pode revalidar capacidades pela API pública de IdentityAccess, sem depender de sessão, Domain ou Infrastructure desse módulo (ADR-0005).
 
 Reporting e Forecasting consultam contratos de leitura de Financial que retornam dados suficientes para preservar origem e consistência. Caso uma tela precise de ambos, a composição acontece na entrada da aplicação; Reporting e Forecasting não passam a depender um do outro.
 
@@ -81,13 +82,13 @@ Reporting e Forecasting consultam contratos de leitura de Financial que retornam
 
 ## Conceitos compartilhados e tenant
 
-No MVP, um tenant está associado a uma empresa e pode conter vários usuários. Cada usuário pertence a um único tenant. Não há identidade global, alternância entre tenants ou carteira de clientes do consultor. Empresa é entidade de negócio; tenant é a fronteira de isolamento e não deve ser tratado como sinônimo de empresa, apesar da relação 1:1 atual (Domain Model §5).
+No MVP, organização define a fronteira de tenant. Usuários globais possuem memberships em uma ou mais organizações, com papéis independentes. A #66 usa os IDs internos/públicos da organização para representar essa fronteira sem tabela Tenant redundante (ADRs 0004/0005).
 
 Toda operação com dados financeiros, incluindo importação, relatórios, projeções, exportação e processamento em segundo plano, exige contexto de tenant conhecido e autorizado. Referências a contas, categorias, compromissos e realizações devem pertencer ao mesmo tenant. Conhecer o identificador de um registro não autoriza seu acesso (BR-071 a BR-075).
 
 Identificadores de tenant e do ator podem atravessar contratos como dados explícitos; não transportar entidades de usuário/empresa ou modelos ORM entre módulos. Um Shared Kernel só receberá abstrações mínimas quando houver uso demonstrável. Valores monetários, moedas e períodos não entram automaticamente nele por serem usados em várias telas. A definição desses contratos cabe à #17.
 
-O mapa não decide banco por tenant, schema por tenant ou tabelas compartilhadas. O Domain Model deixa a estratégia técnica para a arquitetura; essa decisão não pode ser inferida apenas pela existência de um PostgreSQL no ambiente local.
+O ADR-0005 decide tabelas PostgreSQL compartilhadas com organization_id obrigatório, escopo explícito e FKs apropriadas. RLS e schemas/bancos separados permanecem fora desta milestone.
 
 ## Decisões sobre os candidatos da #13
 
