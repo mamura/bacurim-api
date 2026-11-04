@@ -1,8 +1,8 @@
 # Bacurim API
 
-API Laravel 12/PHP 8.3, organizada como monólito modular. A fundação inclui rotas `/api/v1`, contratos HTTP, testes, análise estática e CI. Autenticação SPA por sessão está implementada; funcionalidades financeiras e tenancy efetiva permanecem nas próximas etapas.
+API Laravel 12/PHP 8.3, organizada como monólito modular. A fundação inclui rotas `/api/v1`, contratos HTTP, testes, análise estática e CI. Autenticação SPA por sessão, memberships e contexto explícito de organização estão implementados. A base de isolamento usa PostgreSQL compartilhado; funcionalidades financeiras permanecem nas próximas etapas.
 
-Organizações e identidades globais já possuem domínio, persistência PostgreSQL e casos de uso internos. Consulte [organizações](docs/organizations.md) e [identidade](docs/identity.md). Login/logout/me estão disponíveis por sessão Sanctum; consulte [autenticação](docs/authentication.md). Memberships e gestão de membros por organização estão disponíveis; consulte [vínculos e autorização](docs/memberships.md) e [contrato HTTP](docs/memberships-http.md). Não há cadastro público nem contexto global de tenant para dados financeiros nesta etapa.
+Organizações e identidades globais já possuem domínio, persistência PostgreSQL e casos de uso internos. Consulte [organizações](docs/organizations.md) e [identidade](docs/identity.md). Login/logout/me estão disponíveis por sessão Sanctum; consulte [autenticação](docs/authentication.md). Memberships e gestão de membros por organização estão disponíveis; consulte [vínculos e autorização](docs/memberships.md) e [contrato HTTP](docs/memberships-http.md). O [contexto de tenant](docs/tenant-context.md) é explícito nos casos de uso e revalidado em jobs; consulte as [garantias e limites](docs/tenant-security.md). Cadastro público e dados financeiros ainda não estão implementados.
 
 ## Começar pelo ambiente Docker
 

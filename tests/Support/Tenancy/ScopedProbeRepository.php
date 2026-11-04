@@ -26,11 +26,18 @@ final class ScopedProbeRepository
     /** @return object{public_id:string,label:string}|null */
     public function find(TenantContext $context, string $publicId): ?object
     {
+        if (! Str::isUuid($publicId)) {
+            return null;
+        }
+
         return $this->query($context)->where('public_id', $publicId)->first(['public_id', 'label']);
     }
 
     public function rename(TenantContext $context, string $publicId, string $label): void
     {
+        if (! Str::isUuid($publicId)) {
+            $this->notFound();
+        }
         if ($this->query($context)->where('public_id', $publicId)->update(['label' => $label]) !== 1) {
             $this->notFound();
         }
@@ -38,6 +45,9 @@ final class ScopedProbeRepository
 
     public function archive(TenantContext $context, string $publicId): void
     {
+        if (! Str::isUuid($publicId)) {
+            $this->notFound();
+        }
         if ($this->query($context)->where('public_id', $publicId)->update(['deleted_at' => now()]) !== 1) {
             $this->notFound();
         }

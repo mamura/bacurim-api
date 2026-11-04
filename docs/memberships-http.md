@@ -1,6 +1,6 @@
 # API de membros e organizações
 
-Todos os endpoints exigem sessão Sanctum válida, Origin/Referer permitido e organização explícita no caminho. Obtenha /sanctum/csrf-cookie, faça login e envie o cookie da sessão; mutações exigem X-XSRF-TOKEN. Bearer tokens não concedem acesso.
+Todos os endpoints exigem sessão Sanctum válida e Origin/Referer permitido. Gestão de membros exige organização explícita na rota e o middleware tenant.context; auth/organizations é global. Obtenha /sanctum/csrf-cookie, faça login e envie o cookie da sessão; mutações exigem X-XSRF-TOKEN. Bearer tokens não concedem acesso.
 
 | Método | Caminho | Entrada JSON | Sucesso |
 | --- | --- | --- | --- |
