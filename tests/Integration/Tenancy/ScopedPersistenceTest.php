@@ -12,11 +12,13 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Support\Tenancy\ProbeSchema;
 use Tests\Support\Tenancy\ScopedProbeRepository;
 use Tests\TestCase;
 use TypeError;
 
+#[Group('security')]
 class ScopedPersistenceTest extends TestCase
 {
     use RefreshDatabase;

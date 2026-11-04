@@ -9,9 +9,11 @@ use App\Modules\IdentityAccess\Application\UseCases\UpdateUser;
 use App\Modules\IdentityAccess\Domain\UserStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Middleware\TrustProxies;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Support\StatefulBrowser;
 use Tests\TestCase;
 
+#[Group('security')]
 class SessionSecurityTest extends TestCase
 {
     use RefreshDatabase, StatefulBrowser;

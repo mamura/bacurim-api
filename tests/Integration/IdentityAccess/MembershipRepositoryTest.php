@@ -18,8 +18,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+#[Group('security')]
 class MembershipRepositoryTest extends TestCase
 {
     use RefreshDatabase;

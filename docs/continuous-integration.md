@@ -25,3 +25,7 @@ A regra clássica da master exige pull request, check Quality aprovado, branch a
 Não há aprovação obrigatória de outro revisor, para permitir o fluxo atual com um mantenedor. Revisão independente continua recomendada quando disponível. A proteção é efetiva no plano Free porque este repositório é público; reavaliar o plano antes de torná-lo privado. A configuração vive no GitHub, fora dos arquivos versionados, e deve ser refeita em eventual migração do repositório.
 
 O [PR de validação #38](https://github.com/mamura/bacurim-api/pull/38) registra o exercício completo. Um teste temporário provocou [falha controlada no Quality](https://github.com/mamura/bacurim-api/actions/runs/41249173860), com saída 1, e o GitHub indicou merge bloqueado. O teste foi removido antes da integração; os checks do PR registram a execução de recuperação. O workflow instala as dependências e inicia seu próprio PostgreSQL no runner, sem depender do Compose local ou de serviços externos do workspace.
+
+## Gate de segurança (#79)
+
+O job Quality executa auditoria explícita do composer.lock e composer check, que inclui os grupos security e complementar como etapas obrigatórias. Avisos de dependências não são ignorados. Diagnósticos PostgreSQL verificam disponibilidade sem imprimir SQL/bindings. Veja [critérios de liberação](security-release-criteria.md).

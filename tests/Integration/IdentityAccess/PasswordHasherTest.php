@@ -4,8 +4,10 @@ namespace Tests\Integration\IdentityAccess;
 
 use App\Modules\IdentityAccess\Application\Contracts\PasswordHasher;
 use App\Modules\IdentityAccess\Application\Security\PasswordHash;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+#[Group('security')]
 class PasswordHasherTest extends TestCase
 {
     public function test_argon_hashes_are_salted_verifiable_and_meet_cost_floor(): void

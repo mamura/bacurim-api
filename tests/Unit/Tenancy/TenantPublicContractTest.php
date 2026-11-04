@@ -7,8 +7,10 @@ use App\Modules\IdentityAccess\Application\Contracts\PublicApi\TenantJobIdentity
 use App\Modules\IdentityAccess\Domain\MembershipPermission;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('security')]
 class TenantPublicContractTest extends TestCase
 {
     public function test_public_capabilities_refer_to_the_existing_policy_vocabulary(): void

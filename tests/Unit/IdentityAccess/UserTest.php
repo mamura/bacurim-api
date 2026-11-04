@@ -8,8 +8,10 @@ use App\Modules\IdentityAccess\Domain\UserStatus;
 use App\Modules\IdentityAccess\Domain\ValueObjects\EmailAddress;
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('security')]
 class UserTest extends TestCase
 {
     private const UUID = 'c4ca63e2-92a4-4c17-bf34-c08753927800';

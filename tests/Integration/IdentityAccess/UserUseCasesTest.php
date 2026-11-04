@@ -15,8 +15,10 @@ use App\Modules\IdentityAccess\Domain\UserStatus;
 use App\SharedKernel\Application\Exceptions\ApplicationFailure;
 use App\SharedKernel\Application\Exceptions\FailureKind;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+#[Group('security')]
 class UserUseCasesTest extends TestCase
 {
     use RefreshDatabase;

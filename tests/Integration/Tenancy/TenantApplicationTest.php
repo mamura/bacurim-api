@@ -12,9 +12,11 @@ use App\Modules\Organizations\Infrastructure\Persistence\Eloquent\Models\Organiz
 use App\SharedKernel\Application\Exceptions\ApplicationFailure;
 use App\SharedKernel\Application\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Support\MembershipTestActor;
 use Tests\TestCase;
 
+#[Group('security')]
 class TenantApplicationTest extends TestCase
 {
     use MembershipTestActor,RefreshDatabase;

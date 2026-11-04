@@ -4,10 +4,12 @@ namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
+use PHPUnit\Framework\Attributes\Group;
 use RuntimeException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Tests\TestCase;
 
+#[Group('security')]
 class ApiProblemContractTest extends TestCase
 {
     public function test_not_found_uses_problem_details_without_query_secrets(): void

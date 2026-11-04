@@ -8,8 +8,10 @@ use App\Modules\IdentityAccess\Domain\MembershipPolicy;
 use App\Modules\IdentityAccess\Domain\MembershipRole;
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('security')]
 class MembershipPolicyTest extends TestCase
 {
     private function member(MembershipRole $role, int $org = 1): OrganizationMembership

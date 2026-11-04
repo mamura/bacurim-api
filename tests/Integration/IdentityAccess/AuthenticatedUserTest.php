@@ -5,9 +5,11 @@ namespace Tests\Integration\IdentityAccess;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Support\StatefulBrowser;
 use Tests\TestCase;
 
+#[Group('security')]
 class AuthenticatedUserTest extends TestCase
 {
     use RefreshDatabase, StatefulBrowser;

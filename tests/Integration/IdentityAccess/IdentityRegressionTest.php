@@ -25,10 +25,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Psr\Log\LoggerInterface;
 use SensitiveParameter;
 use Tests\TestCase;
 
+#[Group('security')]
 class IdentityRegressionTest extends TestCase
 {
     use RefreshDatabase;

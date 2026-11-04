@@ -5,9 +5,11 @@ namespace Tests\Unit\Tenancy;
 use App\SharedKernel\Application\Tenancy\TenantContext;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
+#[Group('security')]
 class TenantContextTest extends TestCase
 {
     private const UUID = 'c4ca63e2-92a4-4c17-bf34-c08753927800';

@@ -10,11 +10,13 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use RuntimeException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\Fixtures\Http\ExampleResource;
 use Tests\TestCase;
 
+#[Group('security')]
 class ApiExtendedContractTest extends TestCase
 {
     public static function failureKinds(): array

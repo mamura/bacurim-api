@@ -15,9 +15,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Support\StatefulBrowser;
 use Tests\TestCase;
 
+#[Group('security')]
 class TenantResolutionTest extends TestCase
 {
     use RefreshDatabase,StatefulBrowser;

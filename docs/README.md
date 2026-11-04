@@ -34,6 +34,13 @@
 - [Jobs por organização](tenant-jobs.md): reconstrução/revalidação sem sessão HTTP.
 - [Segurança de tenant](tenant-security.md): controles, evidências e limites.
 
+## Segurança
+
+- [Critérios de segurança e liberação](security-release-criteria.md): matriz implementada, regressões, gate de CI, riscos e checklist para módulos financeiros.
+- [Validação da API-M1](security-validation.md): resultados por etapa.
+- [Auditoria HTTP e logs](security-http-audit.md): achados, correções e limites.
+- [Contrato de regressão multi-tenant](security-regression-contract.md): adaptação obrigatória aos novos módulos.
+
 ## Decisões e contratos
 
 - [Decisões tecnológicas iniciais](initial-technical-decisions.md).

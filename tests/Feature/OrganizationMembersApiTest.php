@@ -9,9 +9,11 @@ use App\Modules\Organizations\Infrastructure\Persistence\Eloquent\Models\Organiz
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Support\StatefulBrowser;
 use Tests\TestCase;
 
+#[Group('security')]
 class OrganizationMembersApiTest extends TestCase
 {
     use RefreshDatabase,StatefulBrowser;
