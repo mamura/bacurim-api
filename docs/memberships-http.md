@@ -20,4 +20,4 @@ Erros usam application/problem+json: 401 sem sessão válida, 403 origem não co
 
 Não há seleção implícita de tenant, cadastro/convidado automático nem endpoint de bootstrap. O registro interno com primeiro Owner será integrado ao cadastro de empresa posteriormente.
 
-As coleções possuem ordem estável de criação (ID interno), sem paginação/filtros/ordenação configuráveis nesta etapa. Parâmetros de query são rejeitados com 422. Datas do recurso usam UTC com sufixo Z e microssegundos. POST retorna Location com o endereço público do vínculo criado.
+As coleções possuem ordem estável de criação (ID interno), sem paginação/filtros/ordenação configuráveis nesta etapa. Parâmetros de query são rejeitados com 422. Datas do recurso usam UTC com sufixo Z e microssegundos. POST retorna Location com o caminho relativo público do vínculo criado, independente de APP_URL e do domínio do proxy.

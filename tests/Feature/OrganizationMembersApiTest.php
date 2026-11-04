@@ -53,7 +53,7 @@ class OrganizationMembersApiTest extends TestCase
         $this->assertStringNotContainsString($user->email, $created->getContent());
         $this->assertStringContainsString('no-store', $created->headers->get('Cache-Control'));
         $member = $created->json('data.public_id');
-        $created->assertHeader('Location', 'http://api-bacurim.mamura.test'.$this->path($org, $member));
+        $created->assertHeader('Location', $this->path($org, $member));
         $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/', $created->json('data.created_at'));
         $this->browserRequest('GET', $this->path($org))->assertOk()->assertJsonCount(2, 'data');
         $this->browserRequest('PATCH', $this->path($org, $member), ['version' => 1, 'role' => 'admin'])->assertOk()->assertJsonPath('data.version', 2);

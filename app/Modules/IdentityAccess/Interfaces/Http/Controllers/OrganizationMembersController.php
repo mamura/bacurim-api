@@ -28,7 +28,7 @@ final class OrganizationMembersController
 
         $created = $members->add($organization, $input['user_public_id'], MembershipRole::from($input['role']));
 
-        return (new MembershipResource($created))->response()->setStatusCode(201)->header('Location', route('members.update', ['organization' => $created->organizationPublicId, 'membership' => $created->publicId]));
+        return (new MembershipResource($created))->response()->setStatusCode(201)->header('Location', route('members.update', ['organization' => $created->organizationPublicId, 'membership' => $created->publicId], absolute: false));
 
     }
 
