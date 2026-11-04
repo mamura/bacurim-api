@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureValidJson;
 use App\Http\Middleware\NormalizeApiErrors;
 use App\Http\Responses\ProblemDetails;
+use App\Modules\IdentityAccess\Interfaces\Http\Middleware\GuardSpaOrigin;
 use App\SharedKernel\Application\Exceptions\ApplicationFailure;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(NormalizeApiErrors::class);
         $middleware->statefulApi();
+        $middleware->append(GuardSpaOrigin::class);
         $middleware->api(prepend: [EnsureValidJson::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
