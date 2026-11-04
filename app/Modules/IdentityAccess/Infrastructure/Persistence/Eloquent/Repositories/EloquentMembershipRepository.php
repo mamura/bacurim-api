@@ -37,7 +37,7 @@ final class EloquentMembershipRepository implements MembershipRepository
         }
 
         return $this->guard(fn (): OrganizationMembership => DB::transaction(function () use ($membership): OrganizationMembership {
-            $record = MembershipRecord::query()->where('public_id', $membership->publicId)->lockForUpdate()->first();
+            $record = MembershipRecord::query()->where('organization_id', $membership->organizationId)->where('public_id', $membership->publicId)->lockForUpdate()->first();
             if ($record === null) {
                 throw new ApplicationFailure(FailureKind::NotFound, 'memberships.not_found', 'Membership not found.');
             }
@@ -54,14 +54,14 @@ final class EloquentMembershipRepository implements MembershipRepository
         }));
     }
 
-    public function findByPublicId(string $publicId): ?OrganizationMembership
+    public function findInOrganization(int $organizationId, string $publicId): ?OrganizationMembership
     {
         if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/Di', $publicId) !== 1) {
             return null;
         }
 
-        return $this->guard(function () use ($publicId): ?OrganizationMembership {
-            $record = MembershipRecord::query()->where('public_id', strtolower($publicId))->first();
+        return $this->guard(function () use ($organizationId, $publicId): ?OrganizationMembership {
+            $record = MembershipRecord::query()->where('organization_id', $organizationId)->where('public_id', strtolower($publicId))->first();
 
             return $record === null ? null : $this->toDomain($record);
         });

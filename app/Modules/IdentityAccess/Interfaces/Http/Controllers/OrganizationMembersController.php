@@ -11,38 +11,39 @@ use App\Modules\IdentityAccess\Interfaces\Http\Requests\RevokeMemberRequest;
 use App\Modules\IdentityAccess\Interfaces\Http\Requests\UpdateMemberRequest;
 use App\Modules\IdentityAccess\Interfaces\Http\Resources\MembershipResource;
 use App\Modules\IdentityAccess\Interfaces\Http\Resources\UserOrganizationResource;
+use App\Modules\IdentityAccess\Interfaces\Http\TenantContextReader;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\Response;
 
 final class OrganizationMembersController
 {
-    public function index(MembershipCollectionRequest $request, string $organization, ManageOrganizationMembers $members): AnonymousResourceCollection
+    public function index(MembershipCollectionRequest $request, string $organization, ManageOrganizationMembers $members, TenantContextReader $tenant): AnonymousResourceCollection
     {
-        return MembershipResource::collection($members->list($organization));
+        return MembershipResource::collection($members->list($tenant->get()));
     }
 
-    public function store(AddMemberRequest $request, string $organization, ManageOrganizationMembers $members): JsonResponse
+    public function store(AddMemberRequest $request, string $organization, ManageOrganizationMembers $members, TenantContextReader $tenant): JsonResponse
     {
         $input = $request->validated();
 
-        $created = $members->add($organization, $input['user_public_id'], MembershipRole::from($input['role']));
+        $created = $members->add($tenant->get(), $input['user_public_id'], MembershipRole::from($input['role']));
 
         return (new MembershipResource($created))->response()->setStatusCode(201)->header('Location', route('members.update', ['organization' => $created->organizationPublicId, 'membership' => $created->publicId], absolute: false));
 
     }
 
-    public function update(UpdateMemberRequest $request, string $organization, string $membership, ManageOrganizationMembers $members): MembershipResource
+    public function update(UpdateMemberRequest $request, string $organization, string $membership, ManageOrganizationMembers $members, TenantContextReader $tenant): MembershipResource
     {
         $input = $request->validated();
-        $result = isset($input['role']) ? $members->changeRole($organization, $membership, MembershipRole::from($input['role']), (int) $input['version']) : $members->activate($organization, $membership, (int) $input['version']);
+        $result = isset($input['role']) ? $members->changeRole($tenant->get(), $membership, MembershipRole::from($input['role']), (int) $input['version']) : $members->activate($tenant->get(), $membership, (int) $input['version']);
 
         return new MembershipResource($result);
     }
 
-    public function destroy(RevokeMemberRequest $request, string $organization, string $membership, ManageOrganizationMembers $members): Response
+    public function destroy(RevokeMemberRequest $request, string $organization, string $membership, ManageOrganizationMembers $members, TenantContextReader $tenant): Response
     {
-        $members->revoke($organization, $membership, (int) $request->validated('version'));
+        $members->revoke($tenant->get(), $membership, (int) $request->validated('version'));
 
         return response()->noContent();
     }

@@ -5,6 +5,7 @@ use App\Modules\IdentityAccess\Application\Contracts\MembershipActor;
 use App\Modules\IdentityAccess\Application\Contracts\Persistence\UserRepository;
 use App\Modules\IdentityAccess\Application\Data\UserData;
 use App\Modules\IdentityAccess\Application\UseCases\ManageOrganizationMembers;
+use App\Modules\IdentityAccess\Application\UseCases\ResolveTenantContext;
 use App\Modules\IdentityAccess\Domain\MembershipRole;
 use App\SharedKernel\Application\Exceptions\ApplicationFailure;
 use Illuminate\Contracts\Console\Kernel;
@@ -32,14 +33,15 @@ app()->instance(MembershipActor::class, new readonly class($identity) implements
     }
 });
 DB::select("select set_config('application_name', ?, false)", [$tag]);
+$context = app(ResolveTenantContext::class)->execute($org, $identity);
 echo "ready\n";
 flush();
 try {
     $service = app(ManageOrganizationMembers::class);
     if ($operation === 'demote') {
-        $service->changeRole($org, $member, MembershipRole::Viewer, 1);
+        $service->changeRole($context, $member, MembershipRole::Viewer, 1);
     } elseif ($operation === 'revoke') {
-        $service->revoke($org, $member, 1);
+        $service->revoke($context, $member, 1);
     } else {
         throw new RuntimeException('Unknown test operation.');
     }
