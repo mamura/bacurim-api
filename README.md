@@ -2,6 +2,8 @@
 
 API Laravel 12/PHP 8.3, organizada como monólito modular. A fundação inclui rotas `/api/v1`, contratos HTTP, testes, análise estática e CI. Funcionalidades financeiras, autenticação e tenancy efetiva serão implementadas nas próximas etapas.
 
+Organizações e identidades globais já possuem domínio, persistência PostgreSQL e casos de uso internos. Consulte [organizações](docs/organizations.md) e [identidade](docs/identity.md). Não há cadastro público, login, memberships ou isolamento efetivo nesta etapa.
+
 ## Começar pelo ambiente Docker
 
 A infraestrutura local fica uma pasta acima deste repositório:

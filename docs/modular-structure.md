@@ -31,7 +31,7 @@ O autoload PSR-4 existente mapeia `App\` para `app/`. Portanto, o caminho `app/M
 
 O mapa da #13 permite `IdentityAccess → Organizations`, `DataImport → Financial`, `Reporting → Financial` e `Forecasting → Financial`. Consumir apenas contratos públicos de `Application/Contracts/PublicApi` do destino. Os diretórios do PHP não impõem privacidade: essa regra é verificada pela suíte Architecture da #30, dentro dos limites documentados no guia de testes, e também deve ser observada em revisão.
 
-Na fundação (#15), os módulos não continham classes. A #39 implementou Organizations, com domínio, casos de uso, adaptadores e provider próprios; os demais módulos continuam reservados. Os providers e bindings serão definidos na #16, e o exemplo técnico para exercitar as camadas na #18. O autoload permite carregar uma classe, mas isso não registra automaticamente rotas, eventos ou bindings.
+Na fundação (#15), os módulos não continham classes. A #39 implementou Organizations, com domínio, casos de uso, adaptadores e provider próprios; a #45 implementou IdentityAccess para identidades globais e credenciais. Os módulos financeiros continuam reservados. Os providers e bindings serão definidos na #16, e o exemplo técnico para exercitar as camadas na #18. O autoload permite carregar uma classe, mas isso não registra automaticamente rotas, eventos ou bindings.
 
 ## Adicionar um módulo
 
@@ -55,6 +55,6 @@ Na validação original da #15, antes dos tipos de produção da #39, foram usad
 
 ## Código do skeleton
 
-`app/Models/User.php`, `app/Providers/AppServiceProvider.php`, o controller base e as migrations padrão permanecem em seus locais. Não há implementação de autenticação, migração do usuário para IdentityAccess ou alteração do health check nesta tarefa. Infraestrutura Docker continua fora de `bacurim-api`.
+`app/Models/User.php`, `app/Providers/AppServiceProvider.php`, o controller base e as migrations padrão permanecem em seus locais. A #45 mantém app/Models/User.php como compatibilidade para o modelo de persistência de IdentityAccess e acrescenta a entidade pura no módulo. Autenticação e alteração do health check continuam fora do escopo. Infraestrutura Docker continua fora de `bacurim-api`.
 
 Voltar ao [README](../README.md).

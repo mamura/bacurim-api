@@ -45,3 +45,19 @@ ChangeUserPassword exige PasswordChangeAuthorizer antes de consultar o usuário,
 Até a autenticação da #52, o binding real do authorizer é DenyPasswordChanges: nega por padrão. O caminho autorizado é exercitado com implementação explícita somente de teste, sem habilitar bypass em produção. A futura implementação deverá usar o ator realmente autenticado e verificar se pode alterar o usuário solicitado; possuir UUID ou conhecer a senha não substitui autenticação. Não há fluxo de troca administrativa/reset público nesta etapa.
 
 As outras operações são capacidades internas confiáveis, sem endpoints; bordas futuras precisam de autorização própria. Usuário inativo é persistido como tal, mas bloqueio de login/sessões só será efetivado na #52. Falhas usam identity.invalid, identity.not_found, identity.concurrent_update, identity.email_conflict e códigos específicos de senha; nunca incluem credenciais.
+
+## Validação consolidada (#51)
+
+Unitários exercitam domínio e coordenação de casos de uso sem Laravel, com portas controladas de UUID/relógio/persistência/hash. Integrações usam PostgreSQL real, normalização, unicidade em create/update, verificação de e-mail, estados, hashing real, serialização de saídas e cenários de erro.
+
+Regressões verificam que colisões ou falhas de escrita preservam perfil, hash e versão. Uma intercalação determinística muda o perfil entre verificação de senha e gravação: a troca é rejeitada por versão desatualizada e a senha anterior permanece válida. Isso não substitui os testes multiprocesso da milestone de segurança.
+
+A autorização padrão da troca de senha é fail-closed. Usuários inativos têm estado persistido e não podem trocar senha nesse caso de uso, mas o bloqueio de login/sessões depende da #52. Não há endpoint de gestão de usuário exposto para demonstrar o módulo.
+
+Comandos na raiz do workspace:
+
+    docker compose --profile testing up -d --wait postgres-test
+    docker compose exec api composer test -- --filter=IdentityAccess
+    docker compose exec api composer check
+
+As migrations de desenvolvimento não foram aplicadas automaticamente. Após revisar os dados legados e preparar backup quando necessário, o comando usual é docker compose exec api php artisan migrate. Rollback da extensão mantém normalização de e-mail e perde precisão fracionária de datas; não o tratar como restauração de backup.
