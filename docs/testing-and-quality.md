@@ -45,7 +45,7 @@ Execute uma suíte com `composer test -- --testsuite=Unit` (ou Integration, Feat
 O Compose da raiz fornece `postgres-test` no profile `testing`, PostgreSQL 18.6, sem porta publicada. Usa banco/usuário `bacurim_test` e senha pública exclusivamente de teste `testing-only`, sem permissões no serviço de desenvolvimento. O armazenamento tmpfs é descartável; o serviço de desenvolvimento e seus volumes não são utilizados.
 
 ```bash
-docker compose --profile testing up -d --wait postgres-test
+docker compose --profile testing up -d --wait postgres-test redis-test
 docker compose exec api composer test -- --testsuite=Integration
 docker compose exec api composer test
 ```
@@ -120,12 +120,12 @@ Limitações: análise estática de nomes PHP, não prova semântica de regras d
 Na raiz do workspace, prepare as dependências e o serviço exclusivo de testes:
 
 ```bash
-docker compose --profile testing up -d --wait postgres-test
+docker compose --profile testing up -d --wait postgres-test redis-test
 docker compose exec api composer install
 docker compose exec api composer check
 ```
 
-`composer check` executa, em ordem, validação estrita do Composer, Pint sem modificar fontes, PHPStan/Larastan e a suíte completa PHPUnit (incluindo arquitetura e integração PostgreSQL). Retorna no primeiro comando com falha e propaga código diferente de zero, para uso futuro no CI. Não configura GitHub Actions nesta etapa.
+`composer check` executa, em ordem, validação estrita do Composer, Pint sem modificar fontes, PHPStan/Larastan e a suíte completa PHPUnit (incluindo arquitetura e integração PostgreSQL). Retorna no primeiro comando com falha e propaga código diferente de zero, no ambiente local e no GitHub Actions.
 
 Comandos individuais:
 
@@ -140,9 +140,9 @@ docker compose exec api composer format:check
 
 Corrija a causa de falhas, rode o teste/check afetado e depois `composer check` antes do commit. Se usar `composer format`, revise o diff antes de repetir os checks. Não atualizar baseline, desabilitar guardas de banco ou ignorar regras arquiteturais para acomodar uma regressão.
 
-Para CI sem o Compose do workspace: instalar PHP 8.3+ com extensões do composer.lock e pdo_pgsql, executar composer install com require-dev, disponibilizar PostgreSQL 18.6 com as credenciais exclusivas documentadas na #28, definir TEST_DB_HOST/PORT quando necessário e executar composer check. Git, unzip e Composer 2 também são necessários para instalação. Não usar composer install --no-dev no job de qualidade.
+Para CI sem o Compose do workspace: instalar PHP 8.3+ com extensões do composer.lock e pdo_pgsql, executar composer install com require-dev, disponibilizar PostgreSQL 18.6 com as credenciais exclusivas documentadas na #28, definir TEST_DB_HOST/PORT e TEST_REDIS_HOST/PORT quando necessário, iniciar Redis 7 isolado e instalar a extensão PHP redis antes de executar composer check. Git, unzip e Composer 2 também são necessários para instalação. Não usar composer install --no-dev no job de qualidade.
 
-A suíte não precisa de Redis, Traefik ou Nginx para seus contratos HTTP: o kernel de teste recebe as requisições em processo. A integração precisa somente do PostgreSQL exclusivo. Não passar credenciais do ambiente real como forma de preparar os testes. Não executar a suíte em paralelo até configurar isolamento por processo.
+A suíte completa precisa de PostgreSQL e Redis exclusivos; o kernel HTTP roda em processo e não precisa de Traefik/Nginx. Sessões usam redis-test/DB15 nos testes reais de backend e banco exclusivo nos cenários HTTP determinísticos; rate limiting usa array com relógio controlado. Não passar credenciais do ambiente real como forma de preparar os testes. Não executar a suíte em paralelo até configurar isolamento por processo.
 
 ## Evidências da validação
 
@@ -153,6 +153,6 @@ A suíte não precisa de Redis, Traefik ou Nginx para seus contratos HTTP: o ker
 - Regras arquiteturais exercitadas com código real e exemplos positivos/negativos.
 - PHPStan e Pint rejeitaram arquivos temporários com violações conhecidas, com exit code 1; os arquivos foram removidos.
 
-Resultados finais e números de testes devem ser consultados na execução atual, não tratados como uma meta fixa de cobertura. O ambiente e os comandos estão prontos para a configuração do pipeline na próxima etapa.
+Resultados finais e números de testes devem ser consultados na execução atual, não tratados como uma meta fixa de cobertura. O pipeline executa os mesmos comandos locais.
 
 O bootstrap sincroniza as variáveis forçadas de phpunit.xml em getenv, $_ENV e $_SERVER, pois Laravel pode priorizar $_SERVER. A validação final também executa contratos HTTP com APP_ENV=production, DB_DATABASE=bacurim e CACHE_STORE=redis herdados do processo; as configurações de teste devem prevalecer. A guarda de banco permanece ativa como segunda defesa antes das migrations.

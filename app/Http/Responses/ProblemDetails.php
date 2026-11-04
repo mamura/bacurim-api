@@ -68,6 +68,13 @@ final class ProblemDetails
             'instance' => $request->getBaseUrl().$request->getPathInfo(),
         ];
 
+        if ($status === 419) {
+            $problem['title'] = 'Page Expired';
+            $problem['detail'] = 'The CSRF token is missing or expired. Refresh the session and try again.';
+            $problem['type'] = 'urn:bacurim:problem:csrf_token_mismatch';
+            $problem['code'] = 'csrf_token_mismatch';
+        }
+
         if ($exception instanceof ValidationException) {
             $problem['type'] = 'urn:bacurim:problem:validation_failed';
             $problem['code'] = 'validation_failed';

@@ -23,6 +23,8 @@
 
 - [Identidade e usuários](identity.md): domínio global, e-mail canônico, credenciais, persistência e casos de uso internos.
 
+- [Autenticação e sessões](authentication.md): Sanctum, login/logout/me, cookies, CSRF/CORS, limites e integração com Next.js.
+
 ## Decisões e contratos
 
 - [Decisões tecnológicas iniciais](initial-technical-decisions.md).

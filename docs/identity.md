@@ -14,7 +14,7 @@ Criação inicia ativa e não verificada. Ativação/desativação são reversí
 
 A migration aditiva conserva users e seus IDs, hashes e relações existentes. Acrescenta UUID único obrigatório, status e version; normaliza e-mail e converte datas UTC para timestamptz(6). A unicidade original do e-mail, combinada à constraint que exige formato canônico, impede cadastros que difiram apenas por caixa. Constraints protegem nomes, estado, versão, datas e formato de hash bcrypt/Argon2id. A sintaxe completa do e-mail é validada no domínio.
 
-Antes de alterar o schema, valida endereços, colisões após normalização e datas legadas. Dados incompatíveis interrompem a migration para reconciliação explícita, sem unir contas ou trocar senhas silenciosamente. PostgreSQL executa a migration transacionalmente. Down remove apenas a extensão; não apaga usuários. A normalização de e-mail é mantida no rollback e datas retornam à precisão anterior. Nenhum banco de desenvolvimento foi migrado automaticamente.
+Antes de alterar o schema, valida endereços, colisões após normalização e datas legadas. Dados incompatíveis interrompem a migration para reconciliação explícita, sem unir contas ou trocar senhas silenciosamente. PostgreSQL executa a migration transacionalmente. Down remove apenas a extensão; não apaga usuários. A normalização de e-mail é mantida no rollback e datas retornam à precisão anterior. O schema local foi inicializado na #58 após confirmar APP_ENV=local e banco vazio.
 
 Factories usam UUID, estado ativo por padrão e estados inactive/unverified. Hashes das fixtures são exclusivos de teste. Ainda não há fluxo de verificação nem autenticação.
 
@@ -42,9 +42,9 @@ CreateUser recebe UserDetails e senha como parâmetro sensível separado; valida
 
 ChangeUserPassword exige PasswordChangeAuthorizer antes de consultar o usuário, usuário ativo, senha atual válida, nova senha diferente e compatível com a política, e versão atual. Repositório repete a verificação de versão na escrita para cobrir corridas entre leitura/autorização/gravação. O resultado é UserData sem credenciais.
 
-Até a autenticação da #52, o binding real do authorizer é DenyPasswordChanges: nega por padrão. O caminho autorizado é exercitado com implementação explícita somente de teste, sem habilitar bypass em produção. A futura implementação deverá usar o ator realmente autenticado e verificar se pode alterar o usuário solicitado; possuir UUID ou conhecer a senha não substitui autenticação. Não há fluxo de troca administrativa/reset público nesta etapa.
+Desde a #52, RequestPasswordChangeAuthorizer permite somente o próprio ator ativo em um request validado por auth:sanctum e auth.session.valid. Fora desse contexto, a operação continua negada por padrão. A senha atual e versão também são exigidas. Não há fluxo de reset administrativo ou endpoint público de troca de senha nesta etapa.
 
-As outras operações são capacidades internas confiáveis, sem endpoints; bordas futuras precisam de autorização própria. Usuário inativo é persistido como tal, mas bloqueio de login/sessões só será efetivado na #52. Falhas usam identity.invalid, identity.not_found, identity.concurrent_update, identity.email_conflict e códigos específicos de senha; nunca incluem credenciais.
+As outras operações são capacidades internas confiáveis, sem endpoints; bordas futuras precisam de autorização própria. Usuário inativo é persistido como tal, mas a #52 agora bloqueia login e revoga sessões na próxima requisição. Falhas usam identity.invalid, identity.not_found, identity.concurrent_update, identity.email_conflict e códigos específicos de senha; nunca incluem credenciais.
 
 ## Validação consolidada (#51)
 
@@ -52,12 +52,12 @@ Unitários exercitam domínio e coordenação de casos de uso sem Laravel, com p
 
 Regressões verificam que colisões ou falhas de escrita preservam perfil, hash e versão. Uma intercalação determinística muda o perfil entre verificação de senha e gravação: a troca é rejeitada por versão desatualizada e a senha anterior permanece válida. Isso não substitui os testes multiprocesso da milestone de segurança.
 
-A autorização padrão da troca de senha é fail-closed. Usuários inativos têm estado persistido e não podem trocar senha nesse caso de uso, mas o bloqueio de login/sessões depende da #52. Não há endpoint de gestão de usuário exposto para demonstrar o módulo.
+A autorização padrão da troca de senha é fail-closed. Usuários inativos têm estado persistido e não podem trocar senha nesse caso de uso, e a #52 implementa o bloqueio de login e revogação das sessões. Não há endpoint de gestão de usuário exposto para demonstrar o módulo.
 
 Comandos na raiz do workspace:
 
-    docker compose --profile testing up -d --wait postgres-test
+    docker compose --profile testing up -d --wait postgres-test redis-test
     docker compose exec api composer test -- --filter=IdentityAccess
     docker compose exec api composer check
 
-As migrations de desenvolvimento não foram aplicadas automaticamente. Após revisar os dados legados e preparar backup quando necessário, o comando usual é docker compose exec api php artisan migrate. Rollback da extensão mantém normalização de e-mail e perde precisão fracionária de datas; não o tratar como restauração de backup.
+O schema de desenvolvimento foi inicializado na #58 após confirmar banco local vazio. Em outros ambientes, revisar dados legados e preparar backup quando necessário antes de docker compose exec api php artisan migrate. Rollback da extensão mantém normalização de e-mail e perde precisão fracionária de datas; não o tratar como restauração de backup.

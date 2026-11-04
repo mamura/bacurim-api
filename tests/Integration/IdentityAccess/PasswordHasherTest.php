@@ -52,4 +52,12 @@ class PasswordHasherTest extends TestCase
         $this->assertTrue($hasher->verify($plain, $hash));
         $this->assertFalse($hasher->verify(str_repeat('á', 63).'b', $hash));
     }
+
+    public function test_null_bytes_cannot_exploit_legacy_bcrypt_prefix_equivalence(): void
+    {
+        $hasher = $this->app->make(PasswordHasher::class);
+        $legacy = new PasswordHash(password_hash('legacy-pass', PASSWORD_BCRYPT, ['cost' => 4]));
+        $this->assertFalse($hasher->verify("legacy-pass\0suffix", $legacy));
+        $this->assertTrue($hasher->verify('legacy-pass', $legacy));
+    }
 }
