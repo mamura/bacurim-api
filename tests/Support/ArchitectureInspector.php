@@ -57,6 +57,20 @@ final class ArchitectureInspector
                 }
             }
 
+            if ($origin !== null && in_array($origin[0], ['Financial', 'DataImport', 'Reporting', 'Forecasting'], true)
+                && str_contains($namespace, '\\Application\\Contracts\\Persistence')) {
+                foreach ($finder->findInstanceOf($nodes, Node\Stmt\Interface_::class) as $interface) {
+                    foreach ($interface->getMethods() as $method) {
+                        $parameter = $method->params[0] ?? null;
+                        if ($parameter === null || ! $parameter->type instanceof Node\Name
+                            || $parameter->type->toString() !== 'App\\SharedKernel\\Application\\Tenancy\\TenantContext'
+                            || $parameter->default !== null || $parameter->variadic) {
+                            $errors[] = $file.': tenant persistence requires a non-null mandatory TenantContext as first argument';
+                        }
+                    }
+                }
+            }
+
             foreach (array_unique($references) as $reference) {
                 if (str_starts_with($reference, 'Tests\\')) {
                     $errors[] = $file.': production code depends on tests';
