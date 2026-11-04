@@ -64,4 +64,14 @@ class ModuleBoundariesTest extends TestCase
 
         $this->assertStringContainsString('Circular module dependencies', implode("\n", (new ArchitectureInspector)->inspect($sources)));
     }
+
+    public function test_tenant_persistence_contracts_require_explicit_non_nullable_context(): void
+    {
+        foreach (['', 'string $id', '?\\App\\SharedKernel\\Application\\Tenancy\\TenantContext $context', '\\App\\SharedKernel\\Application\\Tenancy\\TenantContext $context = null', '\\App\\SharedKernel\\Application\\Tenancy\\TenantContext ...$contexts'] as $parameters) {
+            $source = '<?php namespace App\\Modules\\Financial\\Application\\Contracts\\Persistence; interface Records { public function find('.$parameters.'): void; }';
+            $this->assertStringContainsString('tenant persistence requires', implode("\n", (new ArchitectureInspector)->inspect(['port.php' => $source])));
+        }
+        $source = '<?php namespace App\\Modules\\Financial\\Application\\Contracts\\Persistence; use App\\SharedKernel\\Application\\Tenancy\\TenantContext; interface Records { public function find(TenantContext $context, string $id): void; }';
+        $this->assertSame([], (new ArchitectureInspector)->inspect(['port.php' => $source]));
+    }
 }
