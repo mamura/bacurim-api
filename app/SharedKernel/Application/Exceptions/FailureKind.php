@@ -4,6 +4,7 @@ namespace App\SharedKernel\Application\Exceptions;
 
 enum FailureKind
 {
+    case Unauthenticated;
     case Validation;
     case Conflict;
     case NotFound;

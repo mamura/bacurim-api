@@ -8,12 +8,16 @@ use App\Modules\IdentityAccess\Application\Contracts\PasswordChangeAuthorizer;
 use App\Modules\IdentityAccess\Application\Contracts\PasswordHasher;
 use App\Modules\IdentityAccess\Application\Contracts\Persistence\UserCredentials;
 use App\Modules\IdentityAccess\Application\Contracts\Persistence\UserRepository;
+use App\Modules\IdentityAccess\Application\Contracts\SessionAuthentication;
+use App\Modules\IdentityAccess\Application\UseCases\GetUser;
 use App\Modules\IdentityAccess\Infrastructure\Auth\IdentityUserProvider;
+use App\Modules\IdentityAccess\Infrastructure\Auth\LaravelSessionAuthentication;
 use App\Modules\IdentityAccess\Infrastructure\Persistence\Eloquent\Repositories\EloquentUserRepository;
 use App\Modules\IdentityAccess\Infrastructure\Services\DenyPasswordChanges;
 use App\Modules\IdentityAccess\Infrastructure\Services\LaravelPasswordHasher;
 use App\Modules\IdentityAccess\Infrastructure\Services\SystemIdentityClock;
 use App\Modules\IdentityAccess\Infrastructure\Services\UuidIdentityIdGenerator;
+use Illuminate\Auth\SessionGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
@@ -23,6 +27,14 @@ final class IdentityAccessServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(SessionAuthentication::class, function ($app) {
+            $guard = $app['auth']->guard('web');
+            if (! $guard instanceof SessionGuard) {
+                throw new \LogicException('Session guard required.');
+            }
+
+            return new LaravelSessionAuthentication($guard, $app->make(GetUser::class));
+        });
         $this->app->bind(PasswordHasher::class, LaravelPasswordHasher::class);
         $this->app->bind(IdentityClock::class, SystemIdentityClock::class);
         $this->app->bind(IdentityIdGenerator::class, UuidIdentityIdGenerator::class);
@@ -33,6 +45,7 @@ final class IdentityAccessServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->loadRoutesFrom(__DIR__.'/../../Interfaces/Http/routes.php');
         Auth::provider('bacurim-identity', function ($app, array $config) {
             return new IdentityUserProvider(
                 $app['hash'], $config['model'], $app->make(PasswordHasher::class),
