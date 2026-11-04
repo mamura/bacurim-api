@@ -24,7 +24,11 @@ final readonly class Organization
         public OrganizationStatus $status,
         public DateTimeImmutable $createdAt,
         public DateTimeImmutable $updatedAt,
+        public int $version = 0,
     ) {
+        if ($version < 0 || ($id === null && $version !== 0)) {
+            throw new InvalidOrganization('Invalid persistence version.');
+        }
         if ($id !== null && $id < 1) {
             throw new InvalidOrganization('The internal identifier must be positive.');
         }
@@ -48,14 +52,14 @@ final readonly class Organization
     {
         $this->validateTime($now);
 
-        return new self($this->id, $this->publicId, $name, $legalName, $document, $this->status, $this->createdAt, $now);
+        return new self($this->id, $this->publicId, $name, $legalName, $document, $this->status, $this->createdAt, $now, $this->version);
     }
 
     public function changeStatus(OrganizationStatus $status, DateTimeImmutable $now): self
     {
         $this->validateTime($now);
 
-        return new self($this->id, $this->publicId, $this->name, $this->legalName, $this->document, $status, $this->createdAt, $now);
+        return new self($this->id, $this->publicId, $this->name, $this->legalName, $this->document, $status, $this->createdAt, $now, $this->version);
     }
 
     private function validateTime(DateTimeImmutable $now): void

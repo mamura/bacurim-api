@@ -15,3 +15,7 @@ O UUID é validado no domínio, mas a unicidade será garantida pelo banco na pe
 ## Schema PostgreSQL (#41)
 
 organizations usa bigint interno, uuid único, nomes varchar(255), documento varchar(14) opcional, estado active/inactive e timestamps com timezone e microssegundos. Constraints rejeitam nomes vazios/controles, documento fora do formato canônico, estado inválido e datas inconsistentes. Dígitos verificadores são responsabilidade do domínio; SQL valida a estrutura. Version inteiro positivo prepara o controle de concorrência na persistência. Não há índice especulativo de estado ou unicidade de documento/nome. Factory oferece organizações ativas/inativas. Rollback é validado somente no banco exclusivo de testes; nenhum banco de desenvolvimento foi migrado automaticamente.
+
+## Persistência (#42)
+
+OrganizationRepository define create, findByPublicId e update na Application. O adaptador Eloquent devolve entidades, preserva timestamps e UUID, e fica registrado no OrganizationsServiceProvider. Consultas inexistentes ou UUID inválido retornam null. Criação usa transação e traduz colisão de UUID em organizations.public_id_conflict. Atualização nunca faz upsert: exige registro existente e a mesma versão. Usa transação e lock de linha, incrementa version e rejeita snapshots desatualizados com organizations.concurrent_update, inclusive quando os timestamps coincidem. Não há exclusão no contrato. Falhas inesperadas de conexão/SQL continuam internas e não são mascaradas como conflito de negócio.
