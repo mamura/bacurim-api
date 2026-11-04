@@ -35,3 +35,13 @@ UserRepository cria identidades com hash explícito, consulta por UUID/e-mail ti
 UserRecord é o modelo de Infrastructure; App Models User é um adaptador de compatibilidade para o skeleton/factories. Nenhuma rota foi criada ou autenticada. Campos sensíveis são ocultos da serialização. O mutator de e-mail usa EmailAddress; password só aceita hash reconhecido, sem hash duplo ou gravação de texto puro. Criação/perfil fora dos casos de uso não representa um fluxo de cadastro suportado.
 
 Colisões de e-mail/UUID são falhas Conflict com códigos estáveis. Erros inesperados de SQL viram IdentityPersistenceFailure sem encadear QueryException, cujos bindings podem conter hashes. Não registrar queries/bindings de credenciais em ferramentas de observabilidade; a proteção do adaptador não cobre listeners de query adicionados externamente.
+
+## Casos de uso (#50)
+
+CreateUser recebe UserDetails e senha como parâmetro sensível separado; valida domínio, gera UUID/horário por portas e persiste somente hash. GetUser consulta por UUID; UpdateUser substitui nome/e-mail e ChangeUserStatus ativa/desativa. Alterações exigem expectedVersion e preservam identidade/criação. UserData contém apenas UUID, nome, e-mail, estado, verificação, datas e versão; não inclui ID interno, senha, hash ou remember_token.
+
+ChangeUserPassword exige PasswordChangeAuthorizer antes de consultar o usuário, usuário ativo, senha atual válida, nova senha diferente e compatível com a política, e versão atual. Repositório repete a verificação de versão na escrita para cobrir corridas entre leitura/autorização/gravação. O resultado é UserData sem credenciais.
+
+Até a autenticação da #52, o binding real do authorizer é DenyPasswordChanges: nega por padrão. O caminho autorizado é exercitado com implementação explícita somente de teste, sem habilitar bypass em produção. A futura implementação deverá usar o ator realmente autenticado e verificar se pode alterar o usuário solicitado; possuir UUID ou conhecer a senha não substitui autenticação. Não há fluxo de troca administrativa/reset público nesta etapa.
+
+As outras operações são capacidades internas confiáveis, sem endpoints; bordas futuras precisam de autorização própria. Usuário inativo é persistido como tal, mas bloqueio de login/sessões só será efetivado na #52. Falhas usam identity.invalid, identity.not_found, identity.concurrent_update, identity.email_conflict e códigos específicos de senha; nunca incluem credenciais.
