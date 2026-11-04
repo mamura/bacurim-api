@@ -11,3 +11,15 @@ Unicidade de usuário/organização exige consulta e restrição transacional no
 ## Persistência (#61)
 
 organization_memberships usa FKs restritivas para users/organizations, UUID único e unicidade permanente (organization_id, user_id). Índices atendem consultas por usuário/estado e organização/estado/papel. CHECKs protegem papel, estado, versão e datas. O repositório retorna domínio puro, usa lock e versão em atualizações, recusa alteração de referências e traduz duplicatas em Conflict. findActive verifica o estado armazenado; o acesso efetivo ainda exige usuário e organização ativos na autorização. Não há delete físico.
+
+## Casos de uso e consistência (#63)
+
+ManageOrganizationMembers oferece add/list/changeRole/activate/revoke com organização explícita. ListUserOrganizations retorna apenas vínculos efetivos do próprio ator. A origem da identidade é MembershipActor; o adapter padrão exige o atributo de identidade colocado pela validação da sessão e a correspondência com o guard. Os casos reconsultam usuário e versão dentro da transação. Não aceitam papéis do cliente como autoridade.
+
+Toda gestão adquire lock na organização antes de consultar autorização/Owners, depois locks de usuários em ordem estável e atualização otimista do vínculo. Isso serializa alterações concorrentes de memberships da mesma organização. Demover/revogar Owner exige outro Owner ativo com usuário ativo. Admin não gerencia Owners, inclusive revogados; vínculos revogados não mudam papel. Ativação mantém o papel existente e exige usuário ativo. Duplicatas exigem reativação explícita. As mutações pedem expectedVersion e recusam snapshots antigos.
+
+RegisterOrganizationWithOwner é uma operação interna para integração futura ao cadastro: exige o mesmo ator autenticado validado, cria uma organização nova e associa o próprio ator como primeiro Owner numa única transação. Não recebe organização existente nem usuário arbitrário, e não possui endpoint nesta etapa. Falha no vínculo desfaz a organização. Não existe bootstrap de Owner em organização preexistente sem autorização.
+
+IdentityAccess integra Organizations apenas pelo contrato público OrganizationDirectory e seu DTO. O snapshot contém identificador interno exclusivamente para integração de persistência; Resources HTTP expõem apenas UUIDs. Não há TenantContext global.
+
+A proteção aqui governa alterações de memberships; alterações internas no ciclo de vida de User/Organization continuam em seus casos de uso existentes. Integrações futuras que desativarem usuários responsáveis deverão definir o fluxo de continuidade administrativa.
