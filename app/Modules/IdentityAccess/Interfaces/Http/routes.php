@@ -12,7 +12,7 @@ Route::prefix('api/v1/auth')->middleware('api')->group(function (): void {
 
 Route::prefix('api/v1')->middleware(['api', 'auth:sanctum', 'auth.session.valid'])->group(function (): void {
     Route::get('auth/organizations', [OrganizationMembersController::class, 'organizations'])->name('auth.organizations');
-    Route::prefix('organizations/{organization}/members')->group(function (): void {
+    Route::prefix('organizations/{organization}/members')->middleware('tenant.context')->group(function (): void {
         Route::get('', [OrganizationMembersController::class, 'index'])->name('members.index');
         Route::post('', [OrganizationMembersController::class, 'store'])->name('members.store');
         Route::patch('{membership}', [OrganizationMembersController::class, 'update'])->name('members.update');
