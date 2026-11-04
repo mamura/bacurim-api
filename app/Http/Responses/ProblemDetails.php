@@ -92,6 +92,6 @@ final class ProblemDetails
             $headers['Pragma'] = 'no-cache';
         }
 
-        return new JsonResponse($problem, $status, [...$headers, 'Content-Type' => 'application/problem+json']);
+        return new JsonResponse($problem, $status, [...ApiResponseHeaders::forRequest($request), ...$headers, 'Content-Type' => 'application/problem+json']);
     }
 }
