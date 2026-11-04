@@ -4,6 +4,9 @@ namespace App\Modules\IdentityAccess\Infrastructure\Providers;
 
 use App\Modules\IdentityAccess\Application\Contracts\IdentityClock;
 use App\Modules\IdentityAccess\Application\Contracts\IdentityIdGenerator;
+use App\Modules\IdentityAccess\Application\Contracts\MembershipActor;
+use App\Modules\IdentityAccess\Application\Contracts\MembershipTransaction;
+use App\Modules\IdentityAccess\Application\Contracts\MembershipUsers;
 use App\Modules\IdentityAccess\Application\Contracts\PasswordChangeAuthorizer;
 use App\Modules\IdentityAccess\Application\Contracts\PasswordHasher;
 use App\Modules\IdentityAccess\Application\Contracts\Persistence\MembershipRepository;
@@ -13,9 +16,12 @@ use App\Modules\IdentityAccess\Application\Contracts\SessionAuthentication;
 use App\Modules\IdentityAccess\Application\UseCases\GetUser;
 use App\Modules\IdentityAccess\Infrastructure\Auth\IdentityUserProvider;
 use App\Modules\IdentityAccess\Infrastructure\Auth\LaravelSessionAuthentication;
+use App\Modules\IdentityAccess\Infrastructure\Auth\RequestMembershipActor;
 use App\Modules\IdentityAccess\Infrastructure\Auth\RequestPasswordChangeAuthorizer;
 use App\Modules\IdentityAccess\Infrastructure\Persistence\Eloquent\Repositories\EloquentMembershipRepository;
 use App\Modules\IdentityAccess\Infrastructure\Persistence\Eloquent\Repositories\EloquentUserRepository;
+use App\Modules\IdentityAccess\Infrastructure\Services\DatabaseMembershipTransaction;
+use App\Modules\IdentityAccess\Infrastructure\Services\EloquentMembershipUsers;
 use App\Modules\IdentityAccess\Infrastructure\Services\LaravelPasswordHasher;
 use App\Modules\IdentityAccess\Infrastructure\Services\SystemIdentityClock;
 use App\Modules\IdentityAccess\Infrastructure\Services\UuidIdentityIdGenerator;
@@ -40,6 +46,9 @@ final class IdentityAccessServiceProvider extends ServiceProvider
 
             return new LaravelSessionAuthentication($guard, $app->make(GetUser::class));
         });
+        $this->app->bind(MembershipActor::class, RequestMembershipActor::class);
+        $this->app->bind(MembershipTransaction::class, DatabaseMembershipTransaction::class);
+        $this->app->bind(MembershipUsers::class, EloquentMembershipUsers::class);
         $this->app->bind(PasswordHasher::class, LaravelPasswordHasher::class);
         $this->app->bind(IdentityClock::class, SystemIdentityClock::class);
         $this->app->bind(IdentityIdGenerator::class, UuidIdentityIdGenerator::class);

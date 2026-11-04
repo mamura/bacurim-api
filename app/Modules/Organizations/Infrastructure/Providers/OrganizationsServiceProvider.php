@@ -5,7 +5,9 @@ namespace App\Modules\Organizations\Infrastructure\Providers;
 use App\Modules\Organizations\Application\Contracts\OrganizationClock;
 use App\Modules\Organizations\Application\Contracts\OrganizationIdGenerator;
 use App\Modules\Organizations\Application\Contracts\Persistence\OrganizationRepository;
+use App\Modules\Organizations\Application\Contracts\PublicApi\OrganizationDirectory;
 use App\Modules\Organizations\Infrastructure\Persistence\Eloquent\Repositories\EloquentOrganizationRepository;
+use App\Modules\Organizations\Infrastructure\Services\EloquentOrganizationDirectory;
 use App\Modules\Organizations\Infrastructure\Services\SystemOrganizationClock;
 use App\Modules\Organizations\Infrastructure\Services\UuidOrganizationIdGenerator;
 use Illuminate\Support\ServiceProvider;
@@ -14,6 +16,7 @@ final class OrganizationsServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(OrganizationDirectory::class, EloquentOrganizationDirectory::class);
         $this->app->bind(OrganizationRepository::class, EloquentOrganizationRepository::class);
         $this->app->bind(OrganizationClock::class, SystemOrganizationClock::class);
         $this->app->bind(OrganizationIdGenerator::class, UuidOrganizationIdGenerator::class);
