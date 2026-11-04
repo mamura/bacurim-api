@@ -110,6 +110,6 @@ class MembershipRepositoryTest extends TestCase
         $row = MembershipRecord::factory()->revoked()->create();
         $this->assertSame(MembershipStatus::Revoked, $row->status);
         $this->expectException(QueryException::class);
-        DB::transaction(fn () => DB::table('users')->where('id',$row->user_id)->delete());
+        DB::transaction(fn () => DB::table('users')->where('id', $row->user_id)->delete());
     }
 }
