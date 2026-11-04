@@ -15,3 +15,9 @@ O teste de logging desta etapa cobre o comportamento normal de autenticação; m
 RoleSecurityTest usa casos de uso e PostgreSQL para validar os quatro papéis atribuíveis pelo Owner, impedir qualquer alteração de Owner por Admin e bloquear autoelevação de Member/Viewer. Negações são acompanhadas da comparação completa das linhas de membership, comprovando que estado, papel e versão permanecem iguais.
 
 Também valida último Owner sem mutação parcial, contexto antigo recusado após reativação no mesmo papel e rebaixamento permitido de Owner para Admin somente com outro Owner ativo, exigindo um contexto novo. A matriz unitária/API e o vínculo específico por organização permanecem nas suítes existentes.
+
+## Concorrência e ciclo de contexto (#77)
+
+MembershipConcurrencyTest executa dois processos/conexões reais com barreira que confirma ambos aguardando o lock da organização em pg_stat_activity. Além das remoções simultâneas de si próprios, testa dois Owners tentando revogar/rebaixar um ao outro: só uma operação conclui e o ator que perdeu o vínculo/papel é recusado após adquirir o lock. Duas inclusões simultâneas do mesmo usuário produzem um vínculo e um conflito, sem duplicação.
+
+O teste de jobs acrescenta acesso a UUID de recurso de outra organização seguido de uma execução legítima no mesmo runner. Casos existentes cobrem organizações inativas, revogação/perda de papel após despacho, rollback, sessão ainda válida em outra organização e limpeza em finally. Não há estado de tenant armazenado no worker. Esses testes não representam teste de carga nem avaliam todos os cenários de produção.

@@ -16,17 +16,18 @@ class MembershipConcurrencyTest extends TestCase
 {
     public static function operations(): array
     {
-        return [['demote'], ['revoke']];
+        return [['demote', false], ['revoke', false], ['demote', true], ['revoke', true], ['add', false]];
     }
 
     #[DataProvider('operations')]
-    public function test_concurrent_owner_removals_leave_one_active_owner(string $operation): void
+    public function test_concurrent_membership_operations_preserve_integrity(string $operation, bool $crossTarget): void
     {
         $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         $org = OrganizationRecord::factory()->create();
         $first = MembershipRecord::factory()->create(['organization_id' => $org->id, 'role' => MembershipRole::Owner]);
         $second = MembershipRecord::factory()->create(['organization_id' => $org->id, 'role' => MembershipRole::Owner]);
         $members = [$first, $second];
+        $extraUser = $operation === 'add' ? UserRecord::factory()->create() : null;
         $processes = [];
         $tags = [];
         try {
@@ -36,7 +37,8 @@ class MembershipConcurrencyTest extends TestCase
                 $tag = 'membership-test-'.Str::uuid();
                 $tags[] = $tag;
                 $user = UserRecord::query()->findOrFail($member->user_id);
-                $process = new Process([PHP_BINARY, base_path('tests/Support/membership-worker.php'), $user->public_id, $org->public_id, $member->public_id, $operation, $tag], base_path(), ['TEST_DB_HOST' => config('database.connections.pgsql.host'), 'TEST_DB_PORT' => (string) config('database.connections.pgsql.port')], timeout: 15);
+                $target = $extraUser?->public_id ?? ($crossTarget ? ($member->id === $first->id ? $second->public_id : $first->public_id) : $member->public_id);
+                $process = new Process([PHP_BINARY, base_path('tests/Support/membership-worker.php'), $user->public_id, $org->public_id, $target, $operation, $tag], base_path(), ['TEST_DB_HOST' => config('database.connections.pgsql.host'), 'TEST_DB_PORT' => (string) config('database.connections.pgsql.port')], timeout: 15);
                 $process->start();
                 $processes[] = $process;
                 $this->assertTrue($process->waitUntil(fn (string $type, string $output): bool => str_contains($output, 'ready')), $process->getErrorOutput());
@@ -58,8 +60,15 @@ class MembershipConcurrencyTest extends TestCase
                 $results[] = json_decode(end($lines), true, flags: JSON_THROW_ON_ERROR)['result'];
             }
             sort($results);
-            $this->assertSame(['memberships.last_owner', 'success'], $results);
-            $this->assertSame(1, MembershipRecord::query()->where('organization_id', $org->id)->where('role', 'owner')->where('status', 'active')->count());
+            $failure = $operation === 'add' ? 'memberships.duplicate' : ($crossTarget ? 'tenant.forbidden' : 'memberships.last_owner');
+            $expected = [$failure, 'success'];
+            sort($expected);
+            $this->assertSame($expected, $results);
+            $this->assertSame($operation === 'add' ? 2 : 1, MembershipRecord::query()->where('organization_id', $org->id)->where('role', 'owner')->where('status', 'active')->count());
+            $this->assertSame($operation === 'add' ? 3 : 2, MembershipRecord::query()->where('organization_id', $org->id)->count());
+            if ($extraUser !== null) {
+                $this->assertSame(1, MembershipRecord::query()->where('organization_id', $org->id)->where('user_id', $extraUser->id)->count());
+            }
         } finally {
             if (DB::transactionLevel() > 0) {
                 DB::rollBack();
@@ -71,7 +80,7 @@ class MembershipConcurrencyTest extends TestCase
             }
             MembershipRecord::query()->where('organization_id', $org->id)->delete();
             OrganizationRecord::query()->whereKey($org->id)->delete();
-            UserRecord::query()->whereIn('id', [$first->user_id, $second->user_id])->delete();
+            UserRecord::query()->whereIn('id', array_filter([$first->user_id, $second->user_id, $extraUser?->id]))->delete();
         }
     }
 }
