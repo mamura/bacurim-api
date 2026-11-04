@@ -12,7 +12,7 @@ final class GuardSpaOrigin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->is('api/v1/auth/*', 'sanctum/csrf-cookie')) {
+        if (! $request->is('api/v1/auth/*', 'api/v1/organizations/*', 'sanctum/csrf-cookie')) {
             return $next($request);
         }
         $origin = $request->header('Origin');
