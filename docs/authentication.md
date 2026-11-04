@@ -23,3 +23,13 @@ Fluxo browser: GET /sanctum/csrf-cookie com credentials:include, depois requisi�
 Origin é validada exatamente na fronteira de autenticação, além de CORS e Sanctum. Referer é aceito quando Origin está ausente e sua origem é autorizada; não aceitar Origin:null ou URL com credenciais. Pedidos não autenticados de /auth/me sem origem continuam recebendo 401 quando o endpoint existir. O bootstrap CSRF rejeita origem não autorizada sem criar sessão.
 
 Os testes não desativam o middleware CSRF: ValidateSpaCsrf mantém a verificação inclusive no PHPUnit. O browser de teste reapresenta cookies reais e utiliza sessão de banco exclusivamente de teste; o teste Redis cobre armazenamento/TTL reais. A integração Next.js de interface/BFF ainda não é implementada por esta API. Chamadas server-side que encaminhem cookies precisam preservar origem confiável e CSRF, sem inventar autenticação.
+
+## Login e logout (#55)
+
+POST /api/v1/auth/login recebe JSON com email e password; campos obrigatórios string, e-mail até 254 e senha até 128 caracteres. Não aplica o mínimo novo a senhas legadas nem remove espaços da senha. Retorna 200 com data contendo public_id, name, email, status e email_verified_at. Não inclui ID interno, versão, senha, hash ou identificador de sessão no corpo.
+
+Credenciais incorretas, usuário inexistente e usuário inativo recebem o mesmo 401 Problem Details identity.invalid_credentials. Entrada inválida recebe 422; CSRF inválido 419; origem não autorizada 403. Autenticação usa o guard web do Laravel. O login destrói o ID de sessão anterior, regenera ID/token CSRF e não usa remember-me.
+
+POST /api/v1/auth/logout exige auth:sanctum, origem confiável e CSRF válido. Retorna 204, remove a autenticação e invalida a sessão, gerando novo ID/token CSRF para a sessão anônima. O frontend deve usar o XSRF-TOKEN atualizado devolvido nos cookies após login/logout. Um cookie de sessão é a credencial de transporte esperada, nunca um token retornado no JSON.
+
+Eventos nativos de autenticação do Laravel podem conter dados sensíveis; não registrar payloads de Attempting/Failed, inputs de login, cookies ou headers CSRF. Não há listener do projeto que registre esses valores. Rate limiting e revogação de sessões existentes serão concluídos na #57.

@@ -23,6 +23,7 @@ final class ProblemDetails
 
         $status = match (true) {
             $exception instanceof ApplicationFailure => match ($exception->kind) {
+                FailureKind::Unauthenticated => 401,
                 FailureKind::Validation => 422,
                 FailureKind::Conflict => 409,
                 FailureKind::NotFound => 404,

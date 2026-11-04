@@ -18,8 +18,11 @@ trait StatefulBrowser
     /** @param array<string, mixed> $data @param array<string, string> $headers */
     protected function browserRequest(string $method, string $uri, #[SensitiveParameter] array $data = [], array $headers = [], bool $csrf = true): TestResponse
     {
+        app('auth')->shouldUse('web');
         app('auth')->forgetGuards();
+        app()->forgetInstance('auth.driver');
         app('session')->forgetDrivers();
+        app()->forgetInstance('session.store');
         $server = ['HTTP_HOST' => 'api-bacurim.mamura.test', 'HTTP_ORIGIN' => 'http://bacurim.mamura.test', 'HTTP_ACCEPT' => 'application/json', 'CONTENT_TYPE' => 'application/json'];
         if ($csrf && isset($this->browserCookies['XSRF-TOKEN'])) {
             $server['HTTP_X_XSRF_TOKEN'] = $this->browserCookies['XSRF-TOKEN'];
