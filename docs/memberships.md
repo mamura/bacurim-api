@@ -23,3 +23,11 @@ RegisterOrganizationWithOwner é uma operação interna para integração futura
 IdentityAccess integra Organizations apenas pelo contrato público OrganizationDirectory e seu DTO. O snapshot contém identificador interno exclusivamente para integração de persistência; Resources HTTP expõem apenas UUIDs. Não há TenantContext global.
 
 A proteção aqui governa alterações de memberships; alterações internas no ciclo de vida de User/Organization continuam em seus casos de uso existentes. Integrações futuras que desativarem usuários responsáveis deverão definir o fluxo de continuidade administrativa.
+
+## Validação final (#65)
+
+Consulte a [matriz de permissões](memberships-authorization.md) e o [contrato HTTP](memberships-http.md). Os testes exercitam todos os papéis nos endpoints de gestão, papéis distintos por organização, revogação/reativação entre sessões reais, bloqueio de referências inativas, tentativas de escalada e vínculos de outra organização, além de CSRF em todas as mutações.
+
+MembershipConcurrencyTest inicia dois processos PHP com conexões PostgreSQL independentes e configuração de testes forçada. Uma barreira de lock confirma no pg_stat_activity que os dois workers concorrem pela mesma organização antes de liberá-los. Tanto na revogação quanto no rebaixamento simultâneo de dois Owners, apenas uma operação pode concluir; a outra retorna memberships.last_owner e um Owner ativo permanece. Os workers recusam qualquer banco/role diferente de bacurim_test. Não exige pcntl nem novos serviços.
+
+Limites atuais: locks de usuários em ordem estável e da organização privilegiam consistência para o MVP. Listagem de membros não tem paginação nesta etapa e inclui vínculos revogados para permitir gestão/reativação. O endpoint de organizações do usuário retorna somente vínculos efetivos e não seleciona tenant ativo.

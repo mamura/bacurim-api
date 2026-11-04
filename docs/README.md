@@ -25,6 +25,10 @@
 
 - [Autenticação e sessões](authentication.md): Sanctum, login/logout/me, cookies, CSRF/CORS, limites e integração com Next.js.
 
+- [Memberships](memberships.md): domínio, persistência, ciclo de vida, casos de uso e consistência transacional.
+- [Matriz de permissões](memberships-authorization.md): Owner, Admin, Member e Viewer por organização.
+- [API de membros](memberships-http.md): endpoints, entradas, respostas, CSRF e autorização.
+
 ## Decisões e contratos
 
 - [Decisões tecnológicas iniciais](initial-technical-decisions.md).
