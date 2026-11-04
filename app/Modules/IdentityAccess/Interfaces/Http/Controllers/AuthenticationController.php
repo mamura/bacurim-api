@@ -2,6 +2,7 @@
 
 namespace App\Modules\IdentityAccess\Interfaces\Http\Controllers;
 
+use App\Modules\IdentityAccess\Application\UseCases\GetAuthenticatedUser;
 use App\Modules\IdentityAccess\Application\UseCases\LoginUser;
 use App\Modules\IdentityAccess\Application\UseCases\LogoutUser;
 use App\Modules\IdentityAccess\Interfaces\Http\Requests\LoginRequest;
@@ -22,5 +23,10 @@ final class AuthenticationController
         $logout->execute();
 
         return response()->noContent();
+    }
+
+    public function me(GetAuthenticatedUser $current): AuthenticatedUserResource
+    {
+        return new AuthenticatedUserResource($current->execute());
     }
 }

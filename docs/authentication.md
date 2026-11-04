@@ -33,3 +33,9 @@ Credenciais incorretas, usuário inexistente e usuário inativo recebem o mesmo 
 POST /api/v1/auth/logout exige auth:sanctum, origem confiável e CSRF válido. Retorna 204, remove a autenticação e invalida a sessão, gerando novo ID/token CSRF para a sessão anônima. O frontend deve usar o XSRF-TOKEN atualizado devolvido nos cookies após login/logout. Um cookie de sessão é a credencial de transporte esperada, nunca um token retornado no JSON.
 
 Eventos nativos de autenticação do Laravel podem conter dados sensíveis; não registrar payloads de Attempting/Failed, inputs de login, cookies ou headers CSRF. Não há listener do projeto que registre esses valores. Rate limiting e revogação de sessões existentes serão concluídos na #57.
+
+## Usuário autenticado (#56)
+
+GET /api/v1/auth/me exige auth:sanctum e devolve 200 com os mesmos campos públicos de login: data.public_id, name, email, status e email_verified_at. Não inclui versão/ID interno, organização ou permissões. Autenticação não concede autorização a uma organização.
+
+Sem sessão válida, com cookie corrompido, sessão expirada no backend ou cookie autenticado anterior ao logout, retorna 401 Problem Details. Bearer tokens são ignorados e não provocam consulta a tabela de tokens. O teste faz login real e reapresenta cookies entre requisições sem actingAs.
