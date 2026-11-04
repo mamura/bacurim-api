@@ -6,6 +6,7 @@ use App\Modules\IdentityAccess\Application\Contracts\IdentityClock;
 use App\Modules\IdentityAccess\Application\Contracts\IdentityIdGenerator;
 use App\Modules\IdentityAccess\Application\Contracts\PasswordChangeAuthorizer;
 use App\Modules\IdentityAccess\Application\Contracts\PasswordHasher;
+use App\Modules\IdentityAccess\Application\Contracts\Persistence\MembershipRepository;
 use App\Modules\IdentityAccess\Application\Contracts\Persistence\UserCredentials;
 use App\Modules\IdentityAccess\Application\Contracts\Persistence\UserRepository;
 use App\Modules\IdentityAccess\Application\Contracts\SessionAuthentication;
@@ -13,6 +14,7 @@ use App\Modules\IdentityAccess\Application\UseCases\GetUser;
 use App\Modules\IdentityAccess\Infrastructure\Auth\IdentityUserProvider;
 use App\Modules\IdentityAccess\Infrastructure\Auth\LaravelSessionAuthentication;
 use App\Modules\IdentityAccess\Infrastructure\Auth\RequestPasswordChangeAuthorizer;
+use App\Modules\IdentityAccess\Infrastructure\Persistence\Eloquent\Repositories\EloquentMembershipRepository;
 use App\Modules\IdentityAccess\Infrastructure\Persistence\Eloquent\Repositories\EloquentUserRepository;
 use App\Modules\IdentityAccess\Infrastructure\Services\LaravelPasswordHasher;
 use App\Modules\IdentityAccess\Infrastructure\Services\SystemIdentityClock;
@@ -42,6 +44,7 @@ final class IdentityAccessServiceProvider extends ServiceProvider
         $this->app->bind(IdentityClock::class, SystemIdentityClock::class);
         $this->app->bind(IdentityIdGenerator::class, UuidIdentityIdGenerator::class);
         $this->app->bind(PasswordChangeAuthorizer::class, RequestPasswordChangeAuthorizer::class);
+        $this->app->bind(MembershipRepository::class, EloquentMembershipRepository::class);
         $this->app->bind(UserRepository::class, EloquentUserRepository::class);
         $this->app->bind(UserCredentials::class, EloquentUserRepository::class);
     }

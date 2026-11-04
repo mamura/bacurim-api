@@ -48,9 +48,12 @@ class OrganizationSchemaTest extends TestCase
     public function test_migration_can_be_rolled_back_and_reapplied(): void
     {
         $migration = require database_path('migrations/2026_11_04_000001_create_organizations_table.php');
+        $memberships = require database_path('migrations/2026_11_04_000003_create_organization_memberships_table.php');
+        $memberships->down();
         $migration->down();
         $this->assertFalse(Schema::hasTable('organizations'));
         $migration->up();
+        $memberships->up();
         OrganizationRecord::factory()->create();
         $this->assertDatabaseCount('organizations', 1);
     }
