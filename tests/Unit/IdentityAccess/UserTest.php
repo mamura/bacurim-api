@@ -91,4 +91,24 @@ class UserTest extends TestCase
         $this->expectException(InvalidIdentity::class);
         User::create('1', 'Ana', new EmailAddress('a@example.com'), new DateTimeImmutable);
     }
+
+    public static function invalidPersistenceStates(): array
+    {
+        return [[null, 1], [1, 0], [0, 1], [1, -1]];
+    }
+
+    #[DataProvider('invalidPersistenceStates')]
+    public function test_invalid_identity_versions_are_rejected(?int $id, int $version): void
+    {
+        $time = new DateTimeImmutable;
+        $this->expectException(InvalidIdentity::class);
+        new User($id, self::UUID, 'Ana', new EmailAddress('a@example.com'), UserStatus::Active, null, $time, $time, $version);
+    }
+
+    public function test_verification_cannot_precede_creation(): void
+    {
+        $time = new DateTimeImmutable;
+        $this->expectException(InvalidIdentity::class);
+        new User(1, self::UUID, 'Ana', new EmailAddress('a@example.com'), UserStatus::Active, $time->modify('-1 second'), $time, $time, 1);
+    }
 }

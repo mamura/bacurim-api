@@ -104,7 +104,7 @@ Conforme Domain Model e Business Rules referenciados no mapa dos contextos:
 
 ## Laravel e estado atual
 
-Laravel permanece responsável por roteamento, container, ORM, configuração e execução dos adaptadores. Classes geradas pelo skeleton, como `app/Models/User.php`, não se tornam entidades de domínio por existirem hoje. Sua futura integração em IdentityAccess será tratada quando houver implementação real, sem movimentar arquivos ou migrations apenas para demonstrar a arquitetura.
+Laravel permanece responsável por roteamento, container, ORM, configuração e execução dos adaptadores. Classes geradas pelo skeleton, como `app/Models/User.php`, não se tornam entidades de domínio por existirem hoje. Na #45, app/Models/User.php passou a ser um adaptador de compatibilidade de Infrastructure; a entidade pura está em IdentityAccess/Domain/Entities/User.php. As migrations permanecem no diretório Laravel e a evolução de users é aditiva.
 
 O health check atual é um endpoint técnico de bootstrap. Ele permanece em `routes/api.php`; não exige um módulo financeiro nem um repositório fictício. A #18 fornecerá o exemplo técnico mínimo para validar camadas e resolução de dependências, sem regras financeiras artificiais.
 
