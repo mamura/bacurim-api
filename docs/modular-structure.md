@@ -31,7 +31,7 @@ O autoload PSR-4 existente mapeia `App\` para `app/`. Portanto, o caminho `app/M
 
 O mapa da #13 permite `IdentityAccess → Organizations`, `DataImport → Financial`, `Reporting → Financial` e `Forecasting → Financial`. Consumir apenas contratos públicos de `Application/Contracts/PublicApi` do destino. Os diretórios do PHP não impõem privacidade: essa regra é verificada pela suíte Architecture da #30, dentro dos limites documentados no guia de testes, e também deve ser observada em revisão.
 
-Nenhum módulo contém classes ou imports neste estágio; não existem dependências entre implementações internas. Os providers e bindings serão definidos na #16, e o exemplo técnico para exercitar as camadas na #18. O autoload permite carregar uma classe, mas isso não registra automaticamente rotas, eventos ou bindings.
+Na fundação (#15), os módulos não continham classes. A #39 implementou Organizations, com domínio, casos de uso, adaptadores e provider próprios; os demais módulos continuam reservados. Os providers e bindings serão definidos na #16, e o exemplo técnico para exercitar as camadas na #18. O autoload permite carregar uma classe, mas isso não registra automaticamente rotas, eventos ou bindings.
 
 ## Adicionar um módulo
 
@@ -51,7 +51,7 @@ docker compose exec api composer test
 docker compose exec api vendor/bin/pint --test
 ```
 
-Como a estrutura ainda não contém tipos de produção, a validação da #15 também usa tipos temporários para verificar a resolução PSR-4 nas quatro camadas dos seis módulos, removidos após o teste. Isso valida a convenção de localização sem introduzir classes artificiais no código versionado.
+Na validação original da #15, antes dos tipos de produção da #39, foram usados tipos temporários para verificar a resolução PSR-4 nas quatro camadas dos seis módulos, removidos após o teste. Isso valida a convenção de localização sem introduzir classes artificiais no código versionado.
 
 ## Código do skeleton
 

@@ -1,5 +1,7 @@
 # Shared Kernel e limites de tenancy
 
+> Evolução API-M1: as premissas abaixo de usuário restrito a um tenant e ausência de identidade global são históricas e foram substituídas pelo [ADR-0004](adr/0004-organization-identity-evolution.md). O planejamento prevê identidade global com memberships em múltiplas organizações e PostgreSQL compartilhado; essas capacidades ainda não estão implementadas pela #39.
+
 Definição da issue [#17](https://github.com/mamura/bacurim-api/issues/17). Complementa o [mapa dos contextos](context-map.md), as [camadas](architecture-layers.md) e as [convenções de integração](module-integration.md). Define contratos e princípios, sem implementar autenticação, autorização real, resolução de tenants ou persistência multitenant.
 
 ## Fronteira do MVP

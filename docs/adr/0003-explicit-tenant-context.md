@@ -1,6 +1,6 @@
 # ADR-0003 — Contexto explícito e núcleo compartilhado mínimo
 
-Status: princípios adotados na fundação (#17–#18); mecanismo de tenancy pendente de implementação.
+Status: parcialmente substituído pelo [ADR-0004](0004-organization-identity-evolution.md) nas premissas de identidade/associação. Contexto explícito e núcleo mínimo permanecem válidos; mecanismo de tenancy pendente de implementação. Contexto e decisão abaixo registram a premissa original da fundação.
 
 ## Contexto
 

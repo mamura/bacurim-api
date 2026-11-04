@@ -17,12 +17,17 @@
 - [Integrações e providers](module-integration.md): contratos públicos, bindings e eventos.
 - [Shared Kernel e tenancy](shared-kernel-and-tenancy.md): contexto explícito e regras de isolamento; resolução real ainda não implementada.
 
+## Domínios implementados
+
+- [Organizações](organizations.md): entidade, invariantes, schema PostgreSQL, persistência, casos de uso internos e limites atuais.
+
 ## Decisões e contratos
 
 - [Decisões tecnológicas iniciais](initial-technical-decisions.md).
 - [ADR-0001: monólito modular](adr/0001-modular-monolith.md).
 - [ADR-0002: camadas e composição](adr/0002-layers-and-composition.md).
 - [ADR-0003: contexto de tenant](adr/0003-explicit-tenant-context.md).
+- [ADR-0004: organização e evolução da identidade](adr/0004-organization-identity-evolution.md).
 - [Contratos HTTP](http-api.md): REST, respostas, paginação, precisão, erros e exemplos.
 
 Os documentos de produto externos estão identificados e sintetizados no mapa dos contextos. Este repositório contém a referência técnica necessária para seguir o desenvolvimento, mas não os arquivos de infraestrutura do workspace nem credenciais locais.
