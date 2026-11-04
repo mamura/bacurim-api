@@ -6,6 +6,7 @@ use App\Http\Responses\ProblemDetails;
 use App\Modules\IdentityAccess\Interfaces\Http\Middleware\EnsureSessionValidity;
 use App\Modules\IdentityAccess\Interfaces\Http\Middleware\GuardSpaOrigin;
 use App\Modules\IdentityAccess\Interfaces\Http\Middleware\NoStoreAuthentication;
+use App\Modules\IdentityAccess\Interfaces\Http\Middleware\ResolveTenant;
 use App\SharedKernel\Application\Exceptions\ApplicationFailure;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -25,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
         $middleware->trimStrings(except: ['new_password']);
         $middleware->trustProxies(headers: Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_PROTO | Request::HEADER_X_FORWARDED_PORT);
-        $middleware->alias(['auth.session.valid' => EnsureSessionValidity::class]);
+        $middleware->alias(['auth.session.valid' => EnsureSessionValidity::class, 'tenant.context' => ResolveTenant::class]);
         $middleware->append(NoStoreAuthentication::class);
         $middleware->append(GuardSpaOrigin::class);
         $middleware->api(prepend: [EnsureValidJson::class]);
