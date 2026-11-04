@@ -27,3 +27,11 @@ Política inicial: 15–128 caracteres UTF-8, permite espaços e frases, sem com
 Hashes bcrypt legados podem ser verificados e sinalizados para rehash; não há login/rehash automático implementado nesta etapa. Candidatos bcrypt maiores que 72 bytes são rejeitados para impedir equivalência por truncamento. A verificação não aplica o comprimento mínimo novo a senhas legadas. Verificação limita a entrada a 512 bytes; novas senhas têm no máximo 128 code points UTF-8. Não altera Unicode ou caixa da senha.
 
 PasswordHash não pertence à entidade User ou a DTO público. JSON/debug são redigidos e serialização PHP é proibida. encoded() é um acesso explícito exclusivo de adaptadores de persistência/hash, nunca deve ser registrado. Parâmetros de senha usam SensitiveParameter; mensagens de erro não repetem o valor. Essas proteções não tornam seguro registrar entradas HTTP indiscriminadamente. Não há login, recuperação ou envio de credenciais.
+
+## Persistência (#49)
+
+UserRepository cria identidades com hash explícito, consulta por UUID/e-mail tipado e atualiza perfil/estado devolvendo entidades puras. UserCredentials fornece acesso restrito ao hash por UUID+versão e substituição com versão esperada. Perfil e credenciais compartilham version: transações com lock de linha rejeitam snapshots desatualizados, inclusive entre mudança de senha e perfil. Substituir senha limpa remember_token, mas ainda não há gerenciamento/invalidação de sessões ativas (pertence à #52).
+
+UserRecord é o modelo de Infrastructure; App Models User é um adaptador de compatibilidade para o skeleton/factories. Nenhuma rota foi criada ou autenticada. Campos sensíveis são ocultos da serialização. O mutator de e-mail usa EmailAddress; password só aceita hash reconhecido, sem hash duplo ou gravação de texto puro. Criação/perfil fora dos casos de uso não representa um fluxo de cadastro suportado.
+
+Colisões de e-mail/UUID são falhas Conflict com códigos estáveis. Erros inesperados de SQL viram IdentityPersistenceFailure sem encadear QueryException, cujos bindings podem conter hashes. Não registrar queries/bindings de credenciais em ferramentas de observabilidade; a proteção do adaptador não cobre listeners de query adicionados externamente.
