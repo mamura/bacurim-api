@@ -87,7 +87,7 @@ final class ProblemDetails
             $problem['detail'] = $exception->publicMessage;
         }
 
-        if ($request->is('api/v1/auth/*', 'sanctum/csrf-cookie')) {
+        if ($request->is('api/v1/auth/*', 'api/v1/organizations/*', 'sanctum/csrf-cookie')) {
             $headers['Cache-Control'] = 'no-store, private';
             $headers['Pragma'] = 'no-cache';
         }

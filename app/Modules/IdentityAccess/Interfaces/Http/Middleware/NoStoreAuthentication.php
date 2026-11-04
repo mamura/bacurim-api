@@ -11,7 +11,7 @@ final class NoStoreAuthentication
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
-        if ($request->is('api/v1/auth/*', 'sanctum/csrf-cookie')) {
+        if ($request->is('api/v1/auth/*', 'api/v1/organizations/*', 'sanctum/csrf-cookie')) {
             $response->headers->set('Cache-Control', 'no-store, private');
             $response->headers->set('Pragma', 'no-cache');
         }
