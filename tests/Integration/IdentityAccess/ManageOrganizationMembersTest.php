@@ -156,6 +156,7 @@ class ManageOrganizationMembersTest extends TestCase
     {
         $this->useMembershipActor(UserRecord::factory()->create());
         $repository = Mockery::mock(MembershipRepository::class);
+        $repository->shouldReceive('forUser')->once()->andReturn([]);
         $repository->shouldReceive('create')->once()->andThrow(new RuntimeException('simulated failure'));
         app()->instance(MembershipRepository::class, $repository);
         try {

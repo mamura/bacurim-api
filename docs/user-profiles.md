@@ -25,3 +25,13 @@ O down remove a coluna profile, sem apagar users/memberships, mas perde a classi
 ## Credenciais e identidade
 
 Atualizações de cadastro, estado e senha preservam profile. UserDetails não aceita perfil da plataforma. Os repositórios devolvem entidades tipadas com o perfil; o contrato HTTP será evoluído de forma aditiva, sem substituir endpoints.
+
+## Cardinalidade e locks (#118)
+
+Incluir, reativar e registrar organização com primeiro Owner usam MembershipCardinality. A organização existente é bloqueada primeiro; os usuários envolvidos são bloqueados por ID interno crescente pelo protocolo já existente. A verificação relê a identidade após o lock e consulta vínculos active de todas as organizações, sem filtrar estado da organização ou do usuário. Standard com outro vínculo ativo recebe 409 memberships.active_limit.
+
+O registro de organização bloqueia o ator antes da criação e verifica a cardinalidade antes de qualquer insert. A ausência de organização prévia dispensa lock de organização existente. Todos os locks são mantidos até commit/rollback. Não adquirir lock de uma organização existente depois de bloquear usuário em um fluxo de alteração global de perfil.
+
+Vínculos revoked não contam; reativação do próprio vínculo ativo não o conta duas vezes. Consultant continua sujeito à autorização empresarial, aos papéis e ao contexto atuais. As portas de persistência são internas; SQL ou modelos usados diretamente fora dos casos de uso não são um fluxo suportado e precisam de revisão.
+
+Regressões usam processos independentes aguardando o mesmo lock de usuário no PostgreSQL, incluindo inclusão/inclusão, inclusão/reativação, duas reativações e registro/inclusão. Casos de falha verificam ausência de organização órfã.
