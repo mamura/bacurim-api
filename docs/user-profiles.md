@@ -45,3 +45,19 @@ A porta UserProfiles separa a escrita privilegiada de UserRepository::update. At
 Uma futura integração confiável deverá autorizar antes do caso de uso. A mudança bloqueia a identidade, relê versão e vínculos active e impede Standard com mais de um vínculo. Não obtém lock de organização depois do usuário. Escreve apenas perfil/data/versão, preservando credenciais e memberships. Versão incrementada invalida sessões/contextos anteriores conforme o comportamento existente.
 
 Falhas: 403 identity.profile_forbidden; 409 identity.profile_memberships_conflict; 409 identity.concurrent_update para versão obsoleta. Não há endpoint novo de mudança de perfil. Rebaixamento sem autorização não é disponibilizado, mesmo quando a cardinalidade permitir.
+
+## Contrato HTTP e frontend (#120)
+
+Login e GET /api/v1/auth/me preservam os campos anteriores e acrescentam data.profile (standard ou consultant). Os envelopes, cookies, CSRF, URLs e status anteriores continuam iguais. O perfil só aparece na representação da própria identidade; não integra o recurso de membro nem concede poderes globais ao Owner/Admin.
+
+GET /api/v1/auth/organizations mantém data como lista de public_id, name, role e membership_public_id. Somente memberships ativos em organizações ativas são retornados. Zero resultados representam ausência de organização autorizada; um permite acesso direto para qualquer perfil; dois ou mais permitem seleção/alternância para Consultant. A contagem de vínculos para a restrição continua incluindo organizações inativas, mesmo que não apareçam nesta lista.
+
+Não há novo endpoint de seleção. O frontend escolhe entre os UUIDs autorizados e os envia nas rotas por organização; cada operação revalida acesso e papel. Na troca, descartar dados/permissões/cache do contexto anterior. Perfil não substitui role. O cliente deve aceitar o campo aditivo e incluir os dois valores em seus tipos/validadores, sem modificar envelopes nem depender de ordenação JSON.
+
+Novos erros seguem application/problem+json (RFC 9457), com type urn:bacurim:problem:<code>, title, status, detail, instance e code:
+- 409 memberships.active_limit: Standard já possui outro vínculo active.
+- 409 identity.profile_memberships_conflict: rebaixamento incompatível com múltiplos vínculos.
+- 403 identity.profile_forbidden: operação privilegiada indisponível/não autorizada.
+- 409 identity.concurrent_update: versão de identidade antiga, já existente.
+
+O conflito de rebaixamento pertence ao caso interno; não foi criado um endpoint para expô-lo. Tentativas de enviar profile nas entradas HTTP existentes retornam 422 validation_failed. Clientes devem tratar conflitos sem retry cego; listar novamente estado/versão quando aplicável. Senhas, IDs internos, versões da identidade e identificadores de sessão não são adicionados às respostas.

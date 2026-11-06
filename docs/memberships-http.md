@@ -21,3 +21,7 @@ Erros usam application/problem+json: 401 sem sessão válida, 403 origem não co
 Não há seleção implícita de tenant, cadastro/convidado automático nem endpoint de bootstrap. O registro interno com primeiro Owner será integrado ao cadastro de empresa posteriormente.
 
 As coleções possuem ordem estável de criação (ID interno), sem paginação/filtros/ordenação configuráveis nesta etapa. Parâmetros de query são rejeitados com 422. Datas do recurso usam UTC com sufixo Z e microssegundos. POST retorna Location com o caminho relativo público do vínculo criado, independente de APP_URL e do domínio do proxy.
+
+## Limites por perfil (#118/#120)
+
+Standard permite no máximo um membership active, inclusive em empresa inativa. POST e reativação podem retornar 409 memberships.active_limit. Consultant admite múltiplos vínculos mediante as mesmas permissões empresariais. O cliente não pode promover perfis por payload; profile é proibido nas entradas de login/gestão de membros. A lista de organizações e os recursos de vínculos mantêm os campos anteriores. Veja [perfis globais e migração](user-profiles.md).

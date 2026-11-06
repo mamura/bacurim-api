@@ -33,7 +33,7 @@ class AuthenticatedUserTest extends TestCase
     {
         $user = $this->login();
         $response = $this->browserRequest('GET', '/api/v1/auth/me')->assertOk()->assertJsonPath('data.public_id', $user->public_id);
-        $this->assertSame(['public_id', 'name', 'email', 'status', 'email_verified_at'], array_keys($response->json('data')));
+        $this->assertSame(['public_id', 'name', 'email', 'profile', 'status', 'email_verified_at'], array_keys($response->json('data')));
         $this->assertStringNotContainsString($user->password, $response->getContent());
         $this->assertArrayNotHasKey('organization_id', $response->json('data'));
         $this->assertArrayNotHasKey('version', $response->json('data'));

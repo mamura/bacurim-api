@@ -95,3 +95,7 @@ Riscos/limites: todos os hosts que recebem cookies no domínio compartilhado pre
 O cookie de sessão usa o nome dedicado bacurim_api_session para evitar colisão com outros projetos locais. A configuração local de APP_URL foi ajustada para a URL da API, preservando APP_KEY e credenciais existentes.
 
 Na conclusão da #58, o ambiente foi confirmado como local com zero tabelas. As migrations existentes foram aplicadas, sem criação de contas ou alteração de APP_KEY/credenciais. A verificação pelo Traefik em api-bacurim.mamura.test confirmou health 200, bootstrap CSRF 204 e respostas 401 em login inválido/me anônimo, com CORS autorizado e Problem Details.
+
+## Perfis globais (#120)
+
+Login e /auth/me acrescentam data.profile: standard ou consultant. Isso não altera a sessão nem concede acesso empresarial. A lista de /auth/organizations continua sendo a fonte de organizações autorizadas para acesso direto (uma), seleção (múltiplas para Consultant) ou ausência de organização (zero). Consulte [perfis globais](user-profiles.md).

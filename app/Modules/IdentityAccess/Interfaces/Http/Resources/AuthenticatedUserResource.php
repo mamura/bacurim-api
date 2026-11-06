@@ -17,6 +17,6 @@ final class AuthenticatedUserResource extends JsonResource
     public function toArray(Request $request): array
     {
         return ['public_id' => $this->user->publicId, 'name' => $this->user->name, 'email' => $this->user->email,
-            'status' => $this->user->status->value, 'email_verified_at' => $this->user->emailVerifiedAt?->format(DATE_ATOM)];
+            'profile' => $this->user->profile->value, 'status' => $this->user->status->value, 'email_verified_at' => $this->user->emailVerifiedAt?->format(DATE_ATOM)];
     }
 }
