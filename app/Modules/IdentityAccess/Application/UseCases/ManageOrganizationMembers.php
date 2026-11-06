@@ -6,6 +6,7 @@ use App\Modules\IdentityAccess\Application\Contracts\IdentityClock;
 use App\Modules\IdentityAccess\Application\Contracts\IdentityIdGenerator;
 use App\Modules\IdentityAccess\Application\Data\MembershipData;
 use App\Modules\IdentityAccess\Application\MembershipAccess;
+use App\Modules\IdentityAccess\Application\Security\MembershipCardinality;
 use App\Modules\IdentityAccess\Domain\Entities\OrganizationMembership;
 use App\Modules\IdentityAccess\Domain\Exceptions\InvalidMembership;
 use App\Modules\IdentityAccess\Domain\MembershipRole;
@@ -16,7 +17,7 @@ use App\SharedKernel\Application\Tenancy\TenantContext;
 
 final readonly class ManageOrganizationMembers
 {
-    public function __construct(private MembershipAccess $access, private IdentityClock $clock, private IdentityIdGenerator $ids) {}
+    public function __construct(private MembershipAccess $access, private IdentityClock $clock, private IdentityIdGenerator $ids, private MembershipCardinality $cardinality) {}
 
     /** @return list<MembershipData> */
     public function list(TenantContext $context): array
@@ -40,6 +41,7 @@ final readonly class ManageOrganizationMembers
             if ($this->access->memberships->findForUser($org->id, $user->id ?? 0) !== null) {
                 throw new ApplicationFailure(FailureKind::Conflict, 'memberships.duplicate', 'The user already has a membership; reactivate the existing membership if revoked.');
             }
+            $this->cardinality->assertMayActivate($user->publicId);
             $member = OrganizationMembership::create($this->ids->generate(), $org->id, $user->id ?? 0, $role, $this->clock->now(), true, $org->active);
 
             return $this->access->data($org, $this->access->memberships->create($member));
@@ -63,6 +65,8 @@ final readonly class ManageOrganizationMembers
         return $this->mutate($context, $membershipPublicId, $expectedVersion, function (OrganizationSnapshot $org, OrganizationMembership $actor, OrganizationMembership $target): OrganizationMembership {
             $this->access->targetPermission($org, $actor, $target->role, $target->role);
             $this->access->requireActive($this->access->requireUser($target->userId));
+
+            $this->cardinality->assertMayActivate($this->access->requireUser($target->userId)->publicId, $target->publicId);
 
             return $target->activate($this->clock->now(), true, $org->active);
         });

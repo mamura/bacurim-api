@@ -62,6 +62,7 @@ class MembershipSecurityTest extends TestCase
     public function test_same_user_owner_and_viewer_roles_do_not_cross_organizations(): void
     {
         $first = MembershipRecord::factory()->create(['role' => MembershipRole::Owner]);
+        UserRecord::query()->whereKey($first->user_id)->update(['profile' => 'consultant']);
         $second = MembershipRecord::factory()->create(['user_id' => $first->user_id, 'role' => MembershipRole::Viewer]);
         $firstOrg = OrganizationRecord::query()->findOrFail($first->organization_id);
         $secondOrg = OrganizationRecord::query()->findOrFail($second->organization_id);
@@ -76,6 +77,7 @@ class MembershipSecurityTest extends TestCase
     public function test_revocation_blocks_next_request_only_in_target_organization_and_reactivation_restores_access(): void
     {
         $member = MembershipRecord::factory()->create(['role' => MembershipRole::Owner]);
+        UserRecord::query()->whereKey($member->user_id)->update(['profile' => 'consultant']);
         $other = MembershipRecord::factory()->create(['user_id' => $member->user_id, 'role' => MembershipRole::Owner]);
         $org = OrganizationRecord::query()->findOrFail($member->organization_id);
         $otherOrg = OrganizationRecord::query()->findOrFail($other->organization_id);
