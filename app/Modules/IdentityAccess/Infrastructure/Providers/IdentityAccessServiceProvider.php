@@ -22,6 +22,7 @@ use App\Modules\IdentityAccess\Infrastructure\Auth\IdentityUserProvider;
 use App\Modules\IdentityAccess\Infrastructure\Auth\LaravelSessionAuthentication;
 use App\Modules\IdentityAccess\Infrastructure\Auth\RequestMembershipActor;
 use App\Modules\IdentityAccess\Infrastructure\Auth\RequestPasswordChangeAuthorizer;
+use App\Modules\IdentityAccess\Infrastructure\Console\AssessMemberships;
 use App\Modules\IdentityAccess\Infrastructure\Persistence\Eloquent\Repositories\EloquentMembershipRepository;
 use App\Modules\IdentityAccess\Infrastructure\Persistence\Eloquent\Repositories\EloquentUserRepository;
 use App\Modules\IdentityAccess\Infrastructure\Services\DatabaseMembershipTransaction;
@@ -66,6 +67,7 @@ final class IdentityAccessServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->commands([AssessMemberships::class]);
         TrustProxies::at(config('auth_security.trusted_proxies'));
         RateLimiter::for('identity-login', static function (Request $request) {
             $email = $request->input('email');
