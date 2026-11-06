@@ -61,3 +61,9 @@ Novos erros seguem application/problem+json (RFC 9457), com type urn:bacurim:pro
 - 409 identity.concurrent_update: versão de identidade antiga, já existente.
 
 O conflito de rebaixamento pertence ao caso interno; não foi criado um endpoint para expô-lo. Tentativas de enviar profile nas entradas HTTP existentes retornam 422 validation_failed. Clientes devem tratar conflitos sem retry cego; listar novamente estado/versão quando aplicável. Senhas, IDs internos, versões da identidade e identificadores de sessão não são adicionados às respostas.
+
+## Validação consolidada (#121)
+
+Fixtures legítimas multiempresa declaram Consultant explicitamente, preservando uma identidade e papéis diferentes por organização. Standard com múltiplos vínculos aparece apenas em testes deliberados de incompatibilidade legada/diagnóstico. A matriz cruza os dois perfis com os quatro papéis, recursos estrangeiros e revogação, sem alterar o contrato Tenant Context nem relaxar o isolamento.
+
+composer check executa security e seu complemento, incluindo arquitetura. O CI mantém auditoria de dependências como gate obrigatório. A referência de resultados e rastreabilidade das regras é security-validation.md. O cliente frontend e a collection Bruno não foram modificados por esta entrega.

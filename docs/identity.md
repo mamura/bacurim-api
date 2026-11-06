@@ -61,3 +61,7 @@ Comandos na raiz do workspace:
     docker compose exec api composer check
 
 O schema de desenvolvimento foi inicializado na #58 após confirmar banco local vazio. Em outros ambientes, revisar dados legados e preparar backup quando necessário antes de docker compose exec api php artisan migrate. Rollback da extensão mantém normalização de e-mail e perde precisão fracionária de datas; não o tratar como restauração de backup.
+
+## Evolução de perfis globais (#115)
+
+A identidade agora possui UserProfile Standard/Consultant, independente do papel empresarial. Novos usuários comuns recebem Standard; atualização de cadastro/estado/senha preserva o perfil. UserData e o contrato da própria identidade carregam o perfil. A migração, cardinalidade, mudança negada por padrão e efeitos sobre versão/sessão estão descritos em [perfis globais](user-profiles.md). As seções anteriores registram entregas históricas; a referência de perfis descreve o contrato atual.

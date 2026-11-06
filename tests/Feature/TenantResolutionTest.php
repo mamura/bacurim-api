@@ -71,6 +71,7 @@ class TenantResolutionTest extends TestCase
     public function test_context_changes_between_requests_and_is_cleared_on_success_failure_and_global_routes(): void
     {
         $first = MembershipRecord::factory()->create();
+        UserRecord::query()->whereKey($first->user_id)->update(['profile' => 'consultant']);
         $second = MembershipRecord::factory()->create(['user_id' => $first->user_id]);
         $a = OrganizationRecord::query()->findOrFail($first->organization_id);
         $b = OrganizationRecord::query()->findOrFail($second->organization_id);

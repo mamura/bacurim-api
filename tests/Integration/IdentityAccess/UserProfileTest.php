@@ -69,6 +69,15 @@ class UserProfileTest extends TestCase
         $this->assertSame(UserProfile::Standard, $multiple->fresh()->profile);
     }
 
+    public function test_consultant_multiple_memberships_are_compatible_with_read_only_diagnostic(): void
+    {
+        $user = UserRecord::factory()->consultant()->inactive()->create();
+        MembershipRecord::factory()->count(2)->create(['user_id' => $user->id]);
+        $before = DB::table('users')->where('id', $user->id)->first();
+        $this->artisan('identity:assess-memberships')->expectsOutputToContain('{"zero":0,"one":0,"multiple":1}')->expectsOutputToContain('incompatible=0')->assertExitCode(0);
+        $this->assertEquals($before, DB::table('users')->where('id', $user->id)->first());
+    }
+
     public function test_migration_preserves_compatible_legacy_records(): void
     {
         $user = UserRecord::factory()->create();

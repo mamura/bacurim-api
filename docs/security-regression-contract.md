@@ -7,3 +7,5 @@ O contrato usa PostgreSQL exclusivo, usuários/memberships reais e exige context
 TenantIsolationContractTest demonstra a conexão com ProbeUseCases/TenantExecution reais e a tabela temporária de probes. Não registra endpoints ou dados financeiros de produção. Módulos financeiros futuros devem conectar o mesmo contrato ao seu repositório/caso real e acrescentar testes de campos não editáveis, FKs compostas, operações em lote, agregações/joins, paginação e suas invariantes financeiras.
 
 A proteção HTTP contra organization_id arbitrário, UUID externo e contexto residual é exercitada por TenantIsolationApiTest; MembershipSecurityTest e TenantResolutionTest preservam os cenários dos endpoints reais. O contrato de base não substitui CSRF, autenticação, rate limiting ou testes de serialização HTTP.
+
+As fixtures que compartilham a mesma identidade entre tenants declaram Consultant explicitamente. Não duplicar identidades para contornar a restrição de Standard nem remover os cenários A→B→A. O contrato é reutilizável também depois da evolução de perfis da #115.
