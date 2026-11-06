@@ -11,13 +11,16 @@ use App\Modules\IdentityAccess\Application\Contracts\PasswordChangeAuthorizer;
 use App\Modules\IdentityAccess\Application\Contracts\PasswordHasher;
 use App\Modules\IdentityAccess\Application\Contracts\Persistence\MembershipRepository;
 use App\Modules\IdentityAccess\Application\Contracts\Persistence\UserCredentials;
+use App\Modules\IdentityAccess\Application\Contracts\Persistence\UserProfiles;
 use App\Modules\IdentityAccess\Application\Contracts\Persistence\UserRepository;
 use App\Modules\IdentityAccess\Application\Contracts\PublicApi\TenantAuthorization;
 use App\Modules\IdentityAccess\Application\Contracts\PublicApi\TenantJobRunner;
 use App\Modules\IdentityAccess\Application\Contracts\SessionAuthentication;
+use App\Modules\IdentityAccess\Application\Contracts\UserProfileChangeAuthorizer;
 use App\Modules\IdentityAccess\Application\Security\OrganizationTenantAuthorization;
 use App\Modules\IdentityAccess\Application\UseCases\GetUser;
 use App\Modules\IdentityAccess\Application\UseCases\RunTenantJob;
+use App\Modules\IdentityAccess\Infrastructure\Auth\DenyUserProfileChanges;
 use App\Modules\IdentityAccess\Infrastructure\Auth\IdentityUserProvider;
 use App\Modules\IdentityAccess\Infrastructure\Auth\LaravelSessionAuthentication;
 use App\Modules\IdentityAccess\Infrastructure\Auth\RequestMembershipActor;
@@ -51,6 +54,8 @@ final class IdentityAccessServiceProvider extends ServiceProvider
 
             return new LaravelSessionAuthentication($guard, $app->make(GetUser::class));
         });
+        $this->app->bind(UserProfileChangeAuthorizer::class, DenyUserProfileChanges::class);
+        $this->app->bind(UserProfiles::class, EloquentUserRepository::class);
         $this->app->bind(MembershipActor::class, RequestMembershipActor::class);
         $this->app->bind(MembershipTransaction::class, DatabaseMembershipTransaction::class);
         $this->app->bind(MembershipUsers::class, EloquentMembershipUsers::class);

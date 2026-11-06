@@ -14,6 +14,16 @@ final readonly class MembershipCardinality
 {
     public function __construct(private MembershipTransaction $transaction, private UserLookup $users, private MembershipRepository $memberships) {}
 
+    public function assertMayBecomeStandard(string $userPublicId): void
+    {
+        $this->transaction->lockUsers([$userPublicId]);
+        $user = $this->users->get($userPublicId);
+        $active = array_filter($this->memberships->forUser($user->id ?? 0), static fn ($membership): bool => $membership->status === MembershipStatus::Active);
+        if (count($active) > 1) {
+            throw new ApplicationFailure(FailureKind::Conflict, 'identity.profile_memberships_conflict', 'A Standard profile requires at most one active organization membership.');
+        }
+    }
+
     /** Caller must own the organization lock first, if operating on an existing organization. */
     public function assertMayActivate(string $userPublicId, ?string $existingMembershipPublicId = null): void
     {

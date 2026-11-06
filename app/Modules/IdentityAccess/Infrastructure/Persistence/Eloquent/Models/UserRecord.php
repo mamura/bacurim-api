@@ -38,6 +38,16 @@ class UserRecord extends Authenticatable
 
     protected $hidden = ['id', 'password', 'remember_token', 'version'];
 
+    /** @param array<string,mixed> $attributes */
+    public function fill(array $attributes)
+    {
+        if (array_key_exists('profile', $attributes) && ! static::isUnguarded()) {
+            throw new \InvalidArgumentException('Platform profile is not a common identity attribute.');
+        }
+
+        return parent::fill($attributes);
+    }
+
     protected function casts(): array
     {
         return ['profile' => UserProfile::class, 'status' => UserStatus::class, 'version' => 'integer', 'email_verified_at' => 'immutable_datetime', 'created_at' => 'immutable_datetime', 'updated_at' => 'immutable_datetime'];
