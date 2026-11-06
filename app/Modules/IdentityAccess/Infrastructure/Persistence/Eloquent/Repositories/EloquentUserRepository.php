@@ -3,9 +3,11 @@
 namespace App\Modules\IdentityAccess\Infrastructure\Persistence\Eloquent\Repositories;
 
 use App\Modules\IdentityAccess\Application\Contracts\Persistence\UserCredentials;
+use App\Modules\IdentityAccess\Application\Contracts\Persistence\UserProfiles;
 use App\Modules\IdentityAccess\Application\Contracts\Persistence\UserRepository;
 use App\Modules\IdentityAccess\Application\Security\PasswordHash;
 use App\Modules\IdentityAccess\Domain\Entities\User;
+use App\Modules\IdentityAccess\Domain\UserProfile;
 use App\Modules\IdentityAccess\Domain\ValueObjects\EmailAddress;
 use App\Modules\IdentityAccess\Infrastructure\Persistence\Eloquent\Models\UserRecord;
 use App\Modules\IdentityAccess\Infrastructure\Persistence\IdentityPersistenceFailure;
@@ -17,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 use LogicException;
 use SensitiveParameter;
 
-final class EloquentUserRepository implements UserCredentials, UserRepository
+final class EloquentUserRepository implements UserCredentials, UserProfiles, UserRepository
 {
     public function create(User $user, #[SensitiveParameter] PasswordHash $password): User
     {
@@ -67,6 +69,9 @@ final class EloquentUserRepository implements UserCredentials, UserRepository
         return $this->guard(function () use ($user): User {
             return DB::transaction(function () use ($user): User {
                 $record = $this->requireRecord($user->publicId, $user->version, true);
+                if ($record->profile !== $user->profile) {
+                    throw new ApplicationFailure(FailureKind::Forbidden, 'identity.profile_forbidden', 'Common identity updates cannot change platform profiles.');
+                }
                 if ($record->id !== $user->id) {
                     throw new LogicException('Identity cannot be reassigned.');
                 }
@@ -96,6 +101,18 @@ final class EloquentUserRepository implements UserCredentials, UserRepository
                 return $this->toDomain($record->refresh());
             });
         });
+    }
+
+    public function replaceProfile(string $publicId, UserProfile $profile, int $expectedVersion, DateTimeImmutable $now): User
+    {
+        return $this->guard(fn (): User => DB::transaction(function () use ($publicId, $profile, $expectedVersion, $now): User {
+            $record = $this->requireRecord($publicId, $expectedVersion, true);
+            $this->toDomain($record)->changeStatus($record->status, $now);
+            $record->forceFill(['profile' => $profile->value, 'version' => $expectedVersion + 1, 'updated_at' => $now]);
+            $record->save();
+
+            return $this->toDomain($record->refresh());
+        }));
     }
 
     private function validId(string $publicId): bool

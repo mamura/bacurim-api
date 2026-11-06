@@ -35,3 +35,13 @@ O registro de organização bloqueia o ator antes da criação e verifica a card
 Vínculos revoked não contam; reativação do próprio vínculo ativo não o conta duas vezes. Consultant continua sujeito à autorização empresarial, aos papéis e ao contexto atuais. As portas de persistência são internas; SQL ou modelos usados diretamente fora dos casos de uso não são um fluxo suportado e precisam de revisão.
 
 Regressões usam processos independentes aguardando o mesmo lock de usuário no PostgreSQL, incluindo inclusão/inclusão, inclusão/reativação, duas reativações e registro/inclusão. Casos de falha verificam ausência de organização órfã.
+
+## Alteração privilegiada e rebaixamento (#119)
+
+ChangeUserProfile é um caso interno com porta UserProfileChangeAuthorizer. A composição de produção usa DenyUserProfileChanges: nenhuma sessão, papel Owner/Admin ou endpoint pode habilitar Consultant. O mecanismo de aprovação continua pendente. Testes usam autorização positiva explicitamente substituída apenas no ambiente testing; isso não cria um canal administrativo de produto.
+
+A porta UserProfiles separa a escrita privilegiada de UserRepository::update. Atualização cadastral comum com perfil divergente é recusada; fill de UserRecord rejeita mass assignment do atributo. As entradas login/adicionar/alterar membro rejeitam profile informado pelo cliente.
+
+Uma futura integração confiável deverá autorizar antes do caso de uso. A mudança bloqueia a identidade, relê versão e vínculos active e impede Standard com mais de um vínculo. Não obtém lock de organização depois do usuário. Escreve apenas perfil/data/versão, preservando credenciais e memberships. Versão incrementada invalida sessões/contextos anteriores conforme o comportamento existente.
+
+Falhas: 403 identity.profile_forbidden; 409 identity.profile_memberships_conflict; 409 identity.concurrent_update para versão obsoleta. Não há endpoint novo de mudança de perfil. Rebaixamento sem autorização não é disponibilizado, mesmo quando a cardinalidade permitir.

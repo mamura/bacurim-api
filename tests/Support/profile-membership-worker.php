@@ -4,11 +4,14 @@ require dirname(__DIR__).'/bootstrap.php';
 
 use App\Modules\IdentityAccess\Application\Contracts\MembershipActor;
 use App\Modules\IdentityAccess\Application\Contracts\Persistence\UserRepository;
+use App\Modules\IdentityAccess\Application\Contracts\UserProfileChangeAuthorizer;
 use App\Modules\IdentityAccess\Application\Data\UserData;
+use App\Modules\IdentityAccess\Application\UseCases\ChangeUserProfile;
 use App\Modules\IdentityAccess\Application\UseCases\ManageOrganizationMembers;
 use App\Modules\IdentityAccess\Application\UseCases\RegisterOrganizationWithOwner;
 use App\Modules\IdentityAccess\Application\UseCases\ResolveTenantContext;
 use App\Modules\IdentityAccess\Domain\MembershipRole;
+use App\Modules\IdentityAccess\Domain\UserProfile;
 use App\SharedKernel\Application\Exceptions\ApplicationFailure;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\DB;
@@ -31,16 +34,24 @@ app()->instance(MembershipActor::class, new readonly class($identity) implements
     }
 });
 DB::select("select set_config('application_name', ?, false)", [$tag]);
-$context = $operation === 'register' ? null : app(ResolveTenantContext::class)->execute($org, $identity);
+$context = in_array($operation, ['register', 'downgrade', 'promote'], true) ? null : app(ResolveTenantContext::class)->execute($org, $identity);
 echo "ready\n";
 flush();
 try {
-    if ($operation === 'register') {
+    if (in_array($operation, ['downgrade', 'promote'], true)) {
+        app()->instance(UserProfileChangeAuthorizer::class, new class implements UserProfileChangeAuthorizer
+        {
+            public function assertMayChange(string $subjectPublicId, UserProfile $requested): void {}
+        });
+        app(ChangeUserProfile::class)->execute($actor, $operation === 'downgrade' ? UserProfile::Standard : UserProfile::Consultant, 1);
+    } elseif ($operation === 'register') {
         app(RegisterOrganizationWithOwner::class)->execute($organizationName);
     } elseif ($operation === 'add') {
         app(ManageOrganizationMembers::class)->add($context, $subject, MembershipRole::Member);
     } elseif ($operation === 'activate') {
         app(ManageOrganizationMembers::class)->activate($context, $subject, 1);
+    } elseif ($operation === 'revoke') {
+        app(ManageOrganizationMembers::class)->revoke($context, $subject, 1);
     } else {
         throw new RuntimeException('Unknown operation.');
     }

@@ -16,6 +16,6 @@ final class AddMemberRequest extends FormRequest
     /** @return array<string,mixed> */
     public function rules(): array
     {
-        return ['user_public_id' => ['required', 'string', 'uuid'], 'role' => ['required', Rule::enum(MembershipRole::class)]];
+        return ['profile' => ['prohibited'], 'user_public_id' => ['required', 'string', 'uuid'], 'role' => ['required', Rule::enum(MembershipRole::class)]];
     }
 }
