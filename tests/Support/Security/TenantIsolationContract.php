@@ -37,6 +37,8 @@ abstract class TenantIsolationContract extends TestCase
     {
         $attributes = [];
         if ($userId !== null) {
+            // Shared identity across tenants explicitly represents a Consultant fixture.
+            UserRecord::query()->whereKey($userId)->update(['profile' => 'consultant']);
             $attributes['user_id'] = $userId;
         }
         $member = MembershipRecord::factory()->create($attributes);

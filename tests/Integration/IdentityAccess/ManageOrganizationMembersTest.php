@@ -126,6 +126,8 @@ class ManageOrganizationMembersTest extends TestCase
     {
         $owner = $this->owner();
         $org = OrganizationRecord::query()->findOrFail($owner->organization_id);
+        UserRecord::query()->whereKey($owner->user_id)->update(['profile' => 'consultant']);
+        $this->useMembershipActor(UserRecord::query()->findOrFail($owner->user_id));
         $other = MembershipRecord::factory()->create(['user_id' => $owner->user_id, 'role' => MembershipRole::Viewer]);
         $otherOrg = OrganizationRecord::query()->findOrFail($other->organization_id);
         $listed = app(ListUserOrganizations::class)->execute();

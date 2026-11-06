@@ -88,3 +88,9 @@ Exigir ausência de falhas críticas/altas conhecidas sem tratamento e revisão 
 | Financeiro e worker de produção ainda não entregues | Validar integrações reais, filas, retries e invariantes ao implementá-los |
 
 Na revisão atual, os avisos encontrados foram corrigidos e não restou falha crítica/alta conhecida sem tratamento dentro do escopo examinado. Isso não equivale a certificação de segurança nem aprovação automática para produção. Os resultados verificáveis ficam nos PRs e execuções de CI da #73.
+
+## Perfis globais após #115
+
+Novos módulos devem preservar a separação entre perfil global e papel empresarial. Consultant não concede permissão financeira ou administrativa extra. Testes que operam a mesma identidade em múltiplos tenants usam Consultant; Standard não pode ganhar segundo vínculo ativo por criação/reativação/registro. Operações privilegiadas de perfil permanecem indisponíveis por padrão.
+
+Acrescentar ao checklist: revisar qualquer novo caminho que ative vínculos ou altere perfil contra o protocolo de lock/releitura da identidade. Não criar lógica de autorização baseada apenas no perfil, nem ignorar os conflitos memberships.active_limit e identity.profile_memberships_conflict. Validar compatibilidade dos dados antes do rollout. A matriz e evidências por BR estão em [validação de segurança](security-validation.md).

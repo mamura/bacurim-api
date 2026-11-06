@@ -31,3 +31,7 @@ Consulte a [matriz de permissões](memberships-authorization.md) e o [contrato H
 MembershipConcurrencyTest inicia dois processos PHP com conexões PostgreSQL independentes e configuração de testes forçada. Uma barreira de lock confirma no pg_stat_activity que os dois workers concorrem pela mesma organização antes de liberá-los. Tanto na revogação quanto no rebaixamento simultâneo de dois Owners, apenas uma operação pode concluir; a outra retorna memberships.last_owner e um Owner ativo permanece. Os workers recusam qualquer banco/role diferente de bacurim_test. Não exige pcntl nem novos serviços.
 
 Limites atuais: locks de usuários em ordem estável e da organização privilegiam consistência para o MVP. Listagem de membros não tem paginação nesta etapa e inclui vínculos revogados para permitir gestão/reativação. O endpoint de organizações do usuário retorna somente vínculos efetivos e não seleciona tenant ativo.
+
+## Perfis e cardinalidade (#115)
+
+A identidade continua global, mas somente Consultant admite vários vínculos active; Standard admite no máximo um. Históricos revoked são preservados. Consultor não herda nenhum papel empresarial e pode ser Owner em uma organização e Viewer em outra. Ver [perfis e protocolo transacional](user-profiles.md).

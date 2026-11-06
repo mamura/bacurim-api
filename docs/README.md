@@ -34,6 +34,8 @@
 - [Jobs por organização](tenant-jobs.md): reconstrução/revalidação sem sessão HTTP.
 - [Segurança de tenant](tenant-security.md): controles, evidências e limites.
 
+- [Perfis globais e migração](user-profiles.md): Standard, Consultant, cardinalidade, autorização privilegiada e compatibilidade.
+
 ## Segurança
 
 - [Critérios de segurança e liberação](security-release-criteria.md): matriz implementada, regressões, gate de CI, riscos e checklist para módulos financeiros.
