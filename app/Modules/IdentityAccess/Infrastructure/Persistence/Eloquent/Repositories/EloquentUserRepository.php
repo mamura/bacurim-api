@@ -126,12 +126,12 @@ final class EloquentUserRepository implements UserCredentials, UserRepository
     /** @return array<string, mixed> */
     private function attributes(User $user): array
     {
-        return ['name' => $user->name, 'email' => $user->email->value, 'status' => $user->status->value, 'email_verified_at' => $user->emailVerifiedAt, 'updated_at' => $user->updatedAt];
+        return ['profile' => $user->profile->value, 'name' => $user->name, 'email' => $user->email->value, 'status' => $user->status->value, 'email_verified_at' => $user->emailVerifiedAt, 'updated_at' => $user->updatedAt];
     }
 
     private function toDomain(UserRecord $record): User
     {
-        return new User($record->id, $record->public_id, $record->name, new EmailAddress($record->email), $record->status, $record->email_verified_at?->toDateTimeImmutable(), $record->created_at->toDateTimeImmutable(), $record->updated_at->toDateTimeImmutable(), $record->version);
+        return new User($record->id, $record->public_id, $record->name, new EmailAddress($record->email), $record->status, $record->email_verified_at?->toDateTimeImmutable(), $record->created_at->toDateTimeImmutable(), $record->updated_at->toDateTimeImmutable(), $record->version, $record->profile);
     }
 
     /**

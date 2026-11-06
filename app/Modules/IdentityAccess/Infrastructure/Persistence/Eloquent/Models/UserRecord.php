@@ -3,6 +3,7 @@
 namespace App\Modules\IdentityAccess\Infrastructure\Persistence\Eloquent\Models;
 
 use App\Modules\IdentityAccess\Application\Security\PasswordHash;
+use App\Modules\IdentityAccess\Domain\UserProfile;
 use App\Modules\IdentityAccess\Domain\UserStatus;
 use App\Modules\IdentityAccess\Domain\ValueObjects\EmailAddress;
 use Carbon\CarbonImmutable;
@@ -17,6 +18,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
  * @property string $name
  * @property string $email
  * @property string $password
+ * @property UserProfile $profile
  * @property UserStatus $status
  * @property int $version
  * @property CarbonImmutable|null $email_verified_at
@@ -38,7 +40,7 @@ class UserRecord extends Authenticatable
 
     protected function casts(): array
     {
-        return ['status' => UserStatus::class, 'version' => 'integer', 'email_verified_at' => 'immutable_datetime', 'created_at' => 'immutable_datetime', 'updated_at' => 'immutable_datetime'];
+        return ['profile' => UserProfile::class, 'status' => UserStatus::class, 'version' => 'integer', 'email_verified_at' => 'immutable_datetime', 'created_at' => 'immutable_datetime', 'updated_at' => 'immutable_datetime'];
     }
 
     /** @return Attribute<string, string> */

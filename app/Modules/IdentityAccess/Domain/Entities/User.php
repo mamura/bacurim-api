@@ -3,6 +3,7 @@
 namespace App\Modules\IdentityAccess\Domain\Entities;
 
 use App\Modules\IdentityAccess\Domain\Exceptions\InvalidIdentity;
+use App\Modules\IdentityAccess\Domain\UserProfile;
 use App\Modules\IdentityAccess\Domain\UserStatus;
 use App\Modules\IdentityAccess\Domain\ValueObjects\EmailAddress;
 use DateTimeImmutable;
@@ -19,6 +20,7 @@ final readonly class User
         public ?DateTimeImmutable $emailVerifiedAt,
         public DateTimeImmutable $createdAt, public DateTimeImmutable $updatedAt,
         public int $version = 0,
+        public UserProfile $profile = UserProfile::Standard,
     ) {
         if (($id !== null && $id < 1) || $version < 0 || (($id === null) !== ($version === 0))) {
             throw new InvalidIdentity('Invalid identity persistence state.');
@@ -46,14 +48,14 @@ final readonly class User
     {
         $this->validateTime($now);
 
-        return new self($this->id, $this->publicId, $name, $email, $this->status, $email->value === $this->email->value ? $this->emailVerifiedAt : null, $this->createdAt, $now, $this->version);
+        return new self($this->id, $this->publicId, $name, $email, $this->status, $email->value === $this->email->value ? $this->emailVerifiedAt : null, $this->createdAt, $now, $this->version, $this->profile);
     }
 
     public function changeStatus(UserStatus $status, DateTimeImmutable $now): self
     {
         $this->validateTime($now);
 
-        return new self($this->id, $this->publicId, $this->name, $this->email, $status, $this->emailVerifiedAt, $this->createdAt, $now, $this->version);
+        return new self($this->id, $this->publicId, $this->name, $this->email, $status, $this->emailVerifiedAt, $this->createdAt, $now, $this->version, $this->profile);
     }
 
     private function validateTime(DateTimeImmutable $now): void

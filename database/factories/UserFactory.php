@@ -18,12 +18,17 @@ class UserFactory extends Factory
 
         return ['public_id' => (string) Str::uuid(), 'name' => fake()->name(), 'email' => strtolower(fake()->unique()->safeEmail()),
             'email_verified_at' => $now, 'password' => static::$password ??= Hash::make('testing-only-password'),
-            'status' => 'active', 'version' => 1, 'remember_token' => null, 'created_at' => $now, 'updated_at' => $now];
+            'profile' => 'standard', 'status' => 'active', 'version' => 1, 'remember_token' => null, 'created_at' => $now, 'updated_at' => $now];
     }
 
     public function unverified(): static
     {
         return $this->state(fn (): array => ['email_verified_at' => null]);
+    }
+
+    public function consultant(): static
+    {
+        return $this->state(fn (): array => ['profile' => 'consultant']);
     }
 
     public function inactive(): static
