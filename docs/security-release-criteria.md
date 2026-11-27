@@ -94,3 +94,9 @@ Na revisão atual, os avisos encontrados foram corrigidos e não restou falha cr
 Novos módulos devem preservar a separação entre perfil global e papel empresarial. Consultant não concede permissão financeira ou administrativa extra. Testes que operam a mesma identidade em múltiplos tenants usam Consultant; Standard não pode ganhar segundo vínculo ativo por criação/reativação/registro. Operações privilegiadas de perfil permanecem indisponíveis por padrão.
 
 Acrescentar ao checklist: revisar qualquer novo caminho que ative vínculos ou altere perfil contra o protocolo de lock/releitura da identidade. Não criar lógica de autorização baseada apenas no perfil, nem ignorar os conflitos memberships.active_limit e identity.profile_memberships_conflict. Validar compatibilidade dos dados antes do rollout. A matriz e evidências por BR estão em [validação de segurança](security-validation.md).
+
+## Financial Core — API-M2
+
+A entrega acrescenta persistência financeira real, contratos de isolamento, testes HTTP com sessão/CSRF, disputas concorrentes e rollback de evento, compromissos e auditoria. Valores são strings BRL com escala máxima 2; referências financeiras são restritas à organização. Histórico e autoria não podem ser reatribuídos por payload.
+
+A aprovação desta etapa permite evoluir WEB-M2 e API-M3 dentro dos contratos documentados em financial-core.md. Realizações, saldos e worker de produção continuam dependentes de projeto e validação próprios. Não reutilizar a aprovação de API-M2 como evidência de funcionalidades ainda ausentes.

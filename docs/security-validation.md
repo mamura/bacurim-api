@@ -42,3 +42,11 @@ Os testes multiprocesso usam barreira PostgreSQL confirmando duas conexões agua
 A autorização positiva de mudança de perfil é uma substituição explícita restrita aos testes. A implementação real permanece negada até definição do mecanismo confiável. Os testes não equivalem à entrega desse mecanismo nem a mudanças de frontend.
 
 Riscos e rollout: [perfis globais](user-profiles.md). Não inferir Consultant por quantidade histórica de vínculos. Parar escritores antigos, diagnosticar, reconciliar explicitamente e só então migrar. Alterações de perfil incrementam version e invalidam sessões/contextos antigos. As regras não protegem SQL administrativo arbitrário que contorne os casos de uso; não foi introduzido RLS ou trigger cross-table.
+
+## Financial Core — API-M2 (#161)
+
+Os contratos de isolamento usam os casos de uso e repositórios reais de contas e categorias. FinancialTenantSecurityTest cobre Consultant alternando organizações com papéis diferentes, revogação de vínculo, revalidação de jobs e referências externas. Nenhum perfil concede acesso sem vínculo ativo.
+
+EconomicConcurrencyTest confirma dois escritores aguardando o lock da mesma organização: somente um altera a versão original, preservando igualdade entre evento e compromisso. EconomicIntegrityRegressionTest injeta falhas na atualização do compromisso e na auditoria para verificar rollback completo; também cobre o limite monetário e a FK histórica. EconomicPersistenceTest verifica constraints adiadas, soma, natureza, histórico e barreira de edição. Os testes HTTP usam sessão e CSRF reais.
+
+A suíte security inclui essas verificações; composer check também executa os demais testes, análise estática e convenções arquiteturais. Isso não constitui teste de carga ou pentest.
