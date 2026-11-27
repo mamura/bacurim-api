@@ -80,3 +80,35 @@ O estado persistido nesta milestone é somente pending; saldo pendente é o valo
 locked_at é barreira técnica de edição do agregado (nula em toda criação API-M2), não operação de realização. Save recusa financial.history_locked quando a barreira estiver preenchida. A futura realização API-M3 deverá marcar a barreira na mesma transação do ledger e adicionar suas próprias invariantes; não existe endpoint para escrever ou limpar esse campo na API-M2.
 
 Conflitos incluem financial.event_identity (natureza/autoria imutáveis), financial.commitment_structure (não substituir/remover vínculos por PATCH) e financial.history_locked. Falha SQL inesperada não encadeia QueryException e reverte evento/filhos/revisões. Categorias históricas inativas são restauradas e consultadas sem perder referência; criação/reclassificação exige categoria ativa e compatível.
+
+## Eventos e compromissos — contrato REST (#154–#160)
+
+Prefixo /api/v1/organizations/{organization}:
+
+| Método | Caminho | Sucesso |
+| --- | --- | --- |
+| POST | /economic-events | 201 + Location relativa |
+| GET | /economic-events | 200 data/links/meta |
+| GET | /economic-events/{event} | 200 data |
+| PATCH | /economic-events/{event} | 200 data e nova version |
+| GET | /financial-commitments | 200 data/links/meta |
+| GET | /financial-commitments/{commitment} | 200 data |
+| GET | /economic-events/{event}/financial-commitments | 200 data/links/meta |
+
+Autenticação, Origin, CSRF, tenant e papéis são os mesmos das contas/categorias. Não há POST/PATCH/DELETE independente de compromissos, nem DELETE de evento ou endpoint de realização.
+
+POST exemplo (todos os montantes são strings):
+
+    {"description":"Consultoria","nature":"income","amount":"123.45","currency":"BRL","competence_date":"2026-01-15","category_public_id":"UUID","commitment":{"due_date":"2026-02-10","expected_amount":"123.45"}}
+
+currency pode ser omitida e será BRL; expected_amount pode ser omitido e será igual ao valor econômico. Se informado, deve corresponder ao valor econômico no compromisso inicial. description é obrigatória, até 255 caracteres sem controles; amount positivo e sem arredondamento; competência/vencimento são datas civis estritas. category_public_id deve ser ativa, compatível e da organização. Não há preenchimento de competência a partir de outro campo.
+
+Evento retorna public_id, description, nature, amount, currency, competence_date, category {public_id,name,nature,status}, commitments, origin=manual, created_by (UUID do ator), editable, version e instantes UTC. Compromisso retorna public_id, event_public_id, nature, expected_amount, pending_amount, currency, due_date, status=pending, temporal_status, reference_date, version e instantes. Não expõe IDs internos, SQL, credenciais ou saldo de conta.
+
+reference_date é a data UTC da consulta, explicitamente retornada. temporal_status é overdue se due_date for anterior à referência, upcoming inclusive no vencimento. Não converte a data civil para timezone. Configuração de timezone empresarial e ciclo de realização pertencem à evolução posterior; consumidores devem usar a reference_date informada, sem confundir status com pagamento.
+
+PATCH exige version e aceita description, amount, competence_date, category_public_id e commitment {due_date,expected_amount} parciais. Natureza, autoria, origem e organização não podem ser reassociadas. Com um compromisso, alterar amount sem expected_amount atualiza ambos atomicamente; informar valores divergentes é 422. Com vários compromissos, edição de descrição/competência/classificação é permitida sem redistribuição; alterações de valores/vencimento são 409 financial.commitment_structure. Nenhuma identidade de compromisso é substituída. Snapshots antigos são 409; barreira histórica preenchida é 409 financial.history_locked.
+
+Categoria antiga inativa continua visível e permite editar descrição sem reclassificar. Nova categoria inativa ou natureza incompatível são 409 financial.category_inactive/category_nature. Categoria externa/inexistente é 404 financial.not_found.
+
+Listagem de eventos: filter[nature], filter[competence_from], filter[competence_to], filter[category_public_id]. Sort: competence_date, amount, description, created_at. Compromissos: filter[nature]=receivable/payable, filter[due_from], filter[due_to], filter[event_public_id]; sort=due_date,expected_amount,created_at. Intervalos são inclusivos e podem ter apenas um limite; dois limites exigem ordem válida. Default created_at asc com desempate id; paginação e links seguem as demais coleções. Na rota aninhada, o evento é autorizado/existente e seu identificador prevalece sobre qualquer filtro. Filtros por UUID estrangeiro não revelam registros de outra organização.
