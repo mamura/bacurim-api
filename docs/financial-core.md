@@ -50,3 +50,19 @@ PostgreSQL usa FK organization restritiva, UUID único, versão e timestamps com
 BR-067/068: renomeação e estado ficam rastreáveis. BR-071–075: toda busca/escrita exige organização. API-M3 deverá derivar saldos de movimentações rastreáveis; API-M2 não calcula nem materializa saldo. Expectativa econômica ou compromisso não altera conta.
 
 Contrato interno de posição: GetFinancialAccountPosition recebe TenantContext e UUID e devolve AccountPosition com moeda, instante de consulta, balance nullable e source. Enquanto não existe ledger, balance=null/source=unavailable; não é zero nem saldo calculado e não há endpoint público novo. API-M3 fornecerá valor rastreável derivado das movimentações. Saldo inicial permanece pendente de regra aprovada, sem lançamento fictício. Conta inativa continua consultável historicamente; elegibilidade para novas movimentações será validada na operação API-M3, sem rejeitar/restaurar silenciosamente fatos antigos.
+
+## Categorias financeiras (#140–#146)
+
+Rotas sob /financial-categories no mesmo prefixo organizacional: GET/POST coleção, GET/PATCH /{category}. POST /financial-categories/initialize é a operação explícita e autorizada de onboarding para instalar os padrões; não há mutação em GET nem carga implícita em migration. Pode ser usada para organizações novas e existentes. Exige a mesma capacidade de escrita, sessão e CSRF.
+
+POST: name, nature (income/cost/expense), parent_public_id opcional/null. PATCH: version obrigatório, name/nature/status opcionais e parent_public_id opcional; null remove o pai, ausência preserva. Resposta inclui public_id/name/nature/status/parent_public_id/is_default/version e datas. Identidade é preservada na renomeação. Não há DELETE ou mesclagem.
+
+Representação hierárquica é lista plana paginada com parent_public_id, evitando árvore parcialmente truncada ou duplicação de recursos. GET da coleção filtra active por padrão, adequado a seleções de novos lançamentos. filter[status]=inactive ou all permite interpretar histórico; consulta individual não esconde categorias inativas. filter[nature] e sort=name,nature,status,created_at seguem as convenções das contas. Para árvore completa, o consumidor deve paginar status=all e montar a hierarquia pelos UUIDs.
+
+Pai e filho exigem mesma natureza/organização. Criação/reorganização exige pai ativo e verifica a cadeia inteira contra ciclos sob lock de organização. Inativar pai não apaga ou inativa filhos automaticamente; estado e classificação permanecem explícitos. Renomear categoria com pai agora inativo não rompe seu histórico. Mudar natureza é recusado se houver filhos ou eventos históricos; reorganizar nunca reatribui registros econômicos.
+
+Inicialização core-v1: somente Receitas/income, Custos/cost e Despesas/expense, sem subcategorias. Chave técnica por organização garante idempotência e unicidade; personalizações de nome/estado nunca são sobrescritas, e categorias personalizadas não são removidas nem mescladas por nome. Não há catálogo adicional presumido. Repetições concorrentes usam o mesmo lock organizacional e criam exatamente três raízes.
+
+FK composta protege pai/natureza/organização no PostgreSQL; CHECK impede auto-referência e valida estado/natureza/datas. Ciclos longos são verificados pelo caso de uso, não por SQL administrativo arbitrário. Eventos futuros terão FK composta para impedir reclassificação histórica. Revisões registram as alterações no mesmo mecanismo das contas.
+
+Conflitos: financial.category_cycle, financial.category_nature, financial.category_inactive, financial.category_in_use, além de financial.concurrent_update. Referências inexistentes ou estrangeiras retornam financial.not_found, sem revelar dados externos.

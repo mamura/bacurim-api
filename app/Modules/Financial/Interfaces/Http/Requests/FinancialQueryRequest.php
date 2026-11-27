@@ -24,7 +24,7 @@ abstract class FinancialQueryRequest extends FormRequest
     public function rules(): array
     {
         $filters = $this->filters();
-        $rules = ['page' => ['sometimes', 'integer', 'min:1', 'max:1000000'], 'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'], 'filter' => ['sometimes', 'array:'.implode(',', array_keys($filters))], 'sort' => ['sometimes', 'string', function (string $attribute, mixed $value, Closure $fail): void {
+        $rules = ['page' => ['sometimes', 'integer', 'min:1', 'max:1000000'], 'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'], 'filter' => ['sometimes', 'array:'.implode(',', array_keys($filters))], 'sort' => ['sometimes', 'bail', 'string', function (string $attribute, mixed $value, Closure $fail): void {
             foreach (explode(',', (string) $value) as $field) {
                 if (! in_array(ltrim($field, '-'), $this->sorts(), true) || str_starts_with($field, '--')) {
                     $fail('Unsupported sorting field.');
