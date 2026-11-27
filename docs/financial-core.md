@@ -112,3 +112,13 @@ PATCH exige version e aceita description, amount, competence_date, category_publ
 Categoria antiga inativa continua visível e permite editar descrição sem reclassificar. Nova categoria inativa ou natureza incompatível são 409 financial.category_inactive/category_nature. Categoria externa/inexistente é 404 financial.not_found.
 
 Listagem de eventos: filter[nature], filter[competence_from], filter[competence_to], filter[category_public_id]. Sort: competence_date, amount, description, created_at. Compromissos: filter[nature]=receivable/payable, filter[due_from], filter[due_to], filter[event_public_id]; sort=due_date,expected_amount,created_at. Intervalos são inclusivos e podem ter apenas um limite; dois limites exigem ordem válida. Default created_at asc com desempate id; paginação e links seguem as demais coleções. Na rota aninhada, o evento é autorizado/existente e seu identificador prevalece sobre qualquer filtro. Filtros por UUID estrangeiro não revelam registros de outra organização.
+
+## Entrega e próximos consumidores — #161
+
+WEB-M2 pode consumir contas, categorias, eventos e compromissos pelos contratos acima. O frontend deve usar os UUIDs de organização autorizada, dinheiro como string BRL, datas civis sem conversão de fuso e a versão retornada em cada PATCH. Após conflito de versão, deve recarregar os dados antes de oferecer nova alteração. POST de evento não possui chave de idempotência: não repetir automaticamente após resposta incerta.
+
+A migração adiciona tabelas financeiras e mantém identidades/vínculos existentes. Não cria categorias implicitamente nem transforma dados legados: o catálogo aprovado é inicializado explicitamente por organização. As únicas raízes padrão aprovadas são Receitas, Custos e Despesas.
+
+API-M3 deverá definir lançamentos e saldos, realização e cancelamento, idempotência e transições dos compromissos. A barreira locked_at deve ser aplicada na mesma transação da primeira realização. Nenhum saldo pode ser inferido dos compromissos previstos; a posição atual permanece indisponível. Transferências, recorrência e parcelamento não foram entregues nesta milestone.
+
+Limites atuais: BRL com duas casas decimais, referência temporal UTC explicitada na resposta e carregamento de compromissos com consultas por agregado. Validar desempenho com o volume efetivo antes de ampliar listagens; a suíte concorrente comprova integridade das disputas exercitadas, não capacidade de carga.
