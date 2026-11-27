@@ -2,6 +2,7 @@
 
 namespace App\Modules\IdentityAccess\Infrastructure\Providers;
 
+use App\Modules\IdentityAccess\Application\AuthorizedTenantOperation;
 use App\Modules\IdentityAccess\Application\Contracts\IdentityClock;
 use App\Modules\IdentityAccess\Application\Contracts\IdentityIdGenerator;
 use App\Modules\IdentityAccess\Application\Contracts\MembershipActor;
@@ -15,6 +16,7 @@ use App\Modules\IdentityAccess\Application\Contracts\Persistence\UserProfiles;
 use App\Modules\IdentityAccess\Application\Contracts\Persistence\UserRepository;
 use App\Modules\IdentityAccess\Application\Contracts\PublicApi\TenantAuthorization;
 use App\Modules\IdentityAccess\Application\Contracts\PublicApi\TenantJobRunner;
+use App\Modules\IdentityAccess\Application\Contracts\PublicApi\TenantOperation;
 use App\Modules\IdentityAccess\Application\Contracts\SessionAuthentication;
 use App\Modules\IdentityAccess\Application\Contracts\UserProfileChangeAuthorizer;
 use App\Modules\IdentityAccess\Application\Security\OrganizationTenantAuthorization;
@@ -59,6 +61,7 @@ final class IdentityAccessServiceProvider extends ServiceProvider
         $this->app->bind(MembershipActor::class, RequestMembershipActor::class);
         $this->app->bind(MembershipTransaction::class, DatabaseMembershipTransaction::class);
         $this->app->bind(MembershipUsers::class, EloquentMembershipUsers::class);
+        $this->app->bind(TenantOperation::class, AuthorizedTenantOperation::class);
         $this->app->bind(TenantAuthorization::class, OrganizationTenantAuthorization::class);
         $this->app->bind(TenantJobRunner::class, RunTenantJob::class);
         $this->app->bind(PasswordHasher::class, LaravelPasswordHasher::class);
