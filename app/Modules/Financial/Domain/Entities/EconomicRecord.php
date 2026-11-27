@@ -8,7 +8,7 @@ use App\Modules\Financial\Domain\ValueObjects\Money;
 final readonly class EconomicRecord
 {
     /** @param list<FinancialCommitment> $commitments */
-    public function __construct(public EconomicEvent $event, public array $commitments)
+    public function __construct(public EconomicEvent $event, public array $commitments, public ?\DateTimeImmutable $lockedAt = null)
     {
         if ($commitments === []) {
             throw new InvalidFinancialData('An economic event requires commitments.');
