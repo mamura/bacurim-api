@@ -66,3 +66,17 @@ Inicialização core-v1: somente Receitas/income, Custos/cost e Despesas/expense
 FK composta protege pai/natureza/organização no PostgreSQL; CHECK impede auto-referência e valida estado/natureza/datas. Ciclos longos são verificados pelo caso de uso, não por SQL administrativo arbitrário. Eventos futuros terão FK composta para impedir reclassificação histórica. Revisões registram as alterações no mesmo mecanismo das contas.
 
 Conflitos: financial.category_cycle, financial.category_nature, financial.category_inactive, financial.category_in_use, além de financial.concurrent_update. Referências inexistentes ou estrangeiras retornam financial.not_found, sem revelar dados externos.
+
+## Persistência econômica e limites históricos (#147–#153)
+
+economic_events e financial_commitments usam UUIDs públicos, organization_id obrigatório, numeric(18,2)/BRL, datas civis independentes e versões. Categoria/natureza/organização e evento/compromisso/organização possuem FKs compostas restritivas. Não há referência a conta no compromisso inicial: a conta será determinada na realização API-M3, sem transformar expectativa em caixa.
+
+EconomicRecordRepository é a única porta de escrita do agregado; FinancialCommitmentRepository somente consulta. Save é transacional, registra autoria e revisões e só retorna depois de persistir evento e filhos. Constraint triggers diferidas no PostgreSQL exigem pelo menos um compromisso, soma igual ao evento e direção compatível no commit, inclusive contra escrita SQL incompleta. No bootstrap de testes com migrate:fresh, a função é recriada de modo idempotente porque o comando apaga tabelas, não funções PostgreSQL.
+
+Criação suporta conceitualmente uma lista explícita de compromissos com valores e datas próprios, sem gerar plano de parcelas ou redistribuir valores. Atualização preserva as identidades e a estrutura existente; compromissos sem alteração não ganham revisão/versão artificial. A API de criação utilizará um compromisso inicial por operação.
+
+O estado persistido nesta milestone é somente pending; saldo pendente é o valor esperado, e temporal overdue/upcoming é independente. API-M3 precisará estender estados/realizações e derivar saldo válido do histórico, sem editar registros realizados. Não há operações antecipadas de pagamento, recebimento, cancelamento, recorrência ou parcelamento.
+
+locked_at é barreira técnica de edição do agregado (nula em toda criação API-M2), não operação de realização. Save recusa financial.history_locked quando a barreira estiver preenchida. A futura realização API-M3 deverá marcar a barreira na mesma transação do ledger e adicionar suas próprias invariantes; não existe endpoint para escrever ou limpar esse campo na API-M2.
+
+Conflitos incluem financial.event_identity (natureza/autoria imutáveis), financial.commitment_structure (não substituir/remover vínculos por PATCH) e financial.history_locked. Falha SQL inesperada não encadeia QueryException e reverte evento/filhos/revisões. Categorias históricas inativas são restauradas e consultadas sem perder referência; criação/reclassificação exige categoria ativa e compatível.
