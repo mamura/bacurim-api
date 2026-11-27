@@ -19,6 +19,8 @@
 
 ## Domínios implementados
 
+- [Financial Core](financial-core.md): contratos, contas, valores e datas, autorização e limites API-M2/API-M3.
+
 - [Organizações](organizations.md): entidade, invariantes, schema PostgreSQL, persistência, casos de uso internos e limites atuais.
 
 - [Identidade e usuários](identity.md): domínio global, e-mail canônico, credenciais, persistência e casos de uso internos.

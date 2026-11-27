@@ -49,11 +49,20 @@ class OrganizationSchemaTest extends TestCase
     {
         $migration = require database_path('migrations/2026_11_04_000001_create_organizations_table.php');
         $memberships = require database_path('migrations/2026_11_04_000003_create_organization_memberships_table.php');
+        // Tenant-owned tables must roll back before their organization; never use CASCADE.
+        $financialFiles = array_values(array_filter(glob(database_path('migrations/*.php')), static fn (string $path): bool => str_contains(basename($path), 'create_financial_') || str_contains(basename($path), 'create_economic_')));
+        sort($financialFiles);
+        foreach (array_reverse($financialFiles) as $file) {
+            (require $file)->down();
+        }
         $memberships->down();
         $migration->down();
         $this->assertFalse(Schema::hasTable('organizations'));
         $migration->up();
         $memberships->up();
+        foreach ($financialFiles as $file) {
+            (require $file)->up();
+        }
         OrganizationRecord::factory()->create();
         $this->assertDatabaseCount('organizations', 1);
     }
